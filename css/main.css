@@ -11,7 +11,7 @@
     ========================================================================== */
     :root{
       /* Colors */
-      --main-bg-color: #83838E;
+      --main-bg-color: #19191b;
       --story-bg-color: #1a1a1a;
       /* --c_story-title-color: #0800F3; */
       --c_story-title-color: rgba(255,255,255,0.9);
@@ -128,10 +128,19 @@ textarea {
    Author's custom styles
    ========================================================================== */
 
+.earth-graphic{
+  position: fixed;
+  width:100%;
+  top:-350px;
+
+  z-index: -1;
+  opacity: 0.1;
+}
+
 .pay-off{
-  align-self: center;
+
   background: var(--accent-color1);
-  padding: 30px;
+  padding: 40px;
 }
 
 .pay-off > h1 {
@@ -142,33 +151,50 @@ textarea {
 }
 
 .pay-off > p {
-  font-size: 23px;
+  font-size: 19px;
   color: #FFFFFF;
   margin-bottom: 0px;
 }
 
 .device{
   justify-self: center;
-  transform: rotate(2deg);
 }
 
 .why-note{
-  background: #FFFFFF;
+  background: #0b0b0b;
   box-shadow: 0 2px 69px 0 rgba(0,0,0,0.08);
-  color: #2E2C2A;
+  color: #fff;
   padding: 55px;
+}
+
+.why-note > h2 {
+  font-size: 50px;
+}
+
+.why-note > p {
+  font-size: 27px;
 }
 
 .roadmap > ul {
   margin-top: 30px;
+  list-style: none;
+  padding: 0px;
 }
 
 .roadmap > ul > li{
-  margin-bottom: 20px;
+  margin-bottom: 5px;
+  background: black;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  color: #b3b3b3;
+  font-size: 15px;
 }
 
 
-
+.octicon{
+  fill: rgba(255,255,255,0.15);
+}
 
 
 

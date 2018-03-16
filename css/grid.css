@@ -19,9 +19,14 @@
 
  }
 
-.pay-off{
+.pay-off-wrap{
   grid-column-start: 2;
   grid-column-end: 7;
+  align-self: center;
+}
+
+.pay-off{
+
 }
 
 .device{
@@ -35,6 +40,11 @@
 }
 
 .roadmap{
-  grid-column-start: 3;
-  grid-column-end: 11;
+  grid-column-start: 5;
+  grid-column-end: 10;
+}
+
+.octicon{
+  grid-column-start: 4;
+  grid-column-end: 5;
 }
