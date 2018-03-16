@@ -135,12 +135,13 @@ textarea {
 
   z-index: -1;
   opacity: 0.1;
+
 }
 
 .pay-off{
 
-  background: var(--accent-color1);
-  padding: 40px;
+  /* background: var(--accent-color1);
+  padding: 40px; */
 }
 
 .pay-off > h1 {
@@ -154,6 +155,43 @@ textarea {
   font-size: 19px;
   color: #FFFFFF;
   margin-bottom: 0px;
+}
+
+
+#mc_embed_signup_scroll{
+  display: flex;
+  align-items: center;
+  display: flex;
+  margin-top: 50px;
+  background: black
+}
+
+.mc-field-group{
+  background: black;
+  flex: 1;
+  display: flex;
+}
+
+#mce-EMAIL{
+  flex: 1;
+  height: 50px;
+  background: transparent;
+  border: 0px;
+  color: white;
+  padding-left: 25px;
+  padding-right: 25px;
+  font-size: 20px;
+  border-radius: 5px 0px 0px 5px;
+}
+
+#mc-embedded-subscribe{
+  height: 50px;
+  border: 0px;
+  background-color: var(--accent-color1);
+  padding-left: 15px;
+  padding-right: 15px;
+  color: white;
+  border-radius: 0 5px 5px 0;
 }
 
 .device{
