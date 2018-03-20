@@ -169,6 +169,7 @@ textarea {
   background: black;
   flex: 1;
   display: flex;
+  position: relative;
 }
 
 #mce-EMAIL{
@@ -193,6 +194,14 @@ textarea {
   color: white;
   border-radius: 0 5px 5px 0;
   -webkit-appearance: none;
+}
+
+#mce_inline_error{
+  position: absolute;
+  top: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: var(--accent-color1);
 }
 
 .device{
