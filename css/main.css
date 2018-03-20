@@ -200,7 +200,7 @@ textarea {
 
 .mce_inline_error:not(.email){
   position: absolute;
-  top: -50px;
+  top: -25px;
   font-size: 13px;
   font-weight: 500;
   background-color: var(--accent-color1);
@@ -264,6 +264,10 @@ textarea {
 
   .why-note > p {
     font-size: 16px;
+  }
+  #mc-embedded-subscribe, .clear, .email{
+    width: 100%;
+    border-radius: 5px;
   }
 }
 

@@ -56,17 +56,17 @@
   }
   .pay-off-wrap{
     grid-column-start: 2;
-    grid-column-end: 11;
+    grid-column-end: 12;
     order: 2;
   }
   .device{
     order: 1;
     grid-column-start: 2;
-    grid-column-end: 11;
+    grid-column-end: 12;
     margin-left: -65px;
   }
   .octicon, .roadmap{
     grid-column-start: 2;
-    grid-column-end: 11;
+    grid-column-end: 12;
   }
 }
