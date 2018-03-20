@@ -48,3 +48,25 @@
   grid-column-start: 4;
   grid-column-end: 5;
 }
+
+@media (max-width: 600px) {
+  .row{
+    padding-top: 50px;
+    padding-bottom: 50px;
+  }
+  .pay-off-wrap{
+    grid-column-start: 2;
+    grid-column-end: 11;
+    order: 2;
+  }
+  .device{
+    order: 1;
+    grid-column-start: 2;
+    grid-column-end: 11;
+    margin-left: -65px;
+  }
+  .octicon, .roadmap{
+    grid-column-start: 2;
+    grid-column-end: 11;
+  }
+}
