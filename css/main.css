@@ -184,7 +184,7 @@ textarea {
   border-radius: 5px 0px 0px 5px;
   -webkit-appearance: none;
   background: black;
-  margin-bottom: 10px;
+  outline: none;
 }
 
 #mc-embedded-subscribe{
@@ -268,6 +268,9 @@ textarea {
   #mc-embedded-subscribe, .clear, .email{
     width: 100%;
     border-radius: 5px;
+  }
+  .email{
+    margin-bottom: 10px;
   }
 }
 
