@@ -183,7 +183,7 @@ textarea {
   font-size: 20px;
   border-radius: 5px 0px 0px 5px;
   -webkit-appearance: none;
-  background: black
+  background: black;
   margin-bottom: 10px;
 }
 
@@ -198,9 +198,9 @@ textarea {
   -webkit-appearance: none;
 }
 
-.mce_inline_error{
+.mce_inline_error:not(.email){
   position: absolute;
-  top: 100%;
+  top: -50px;
   font-size: 13px;
   font-weight: 500;
   background-color: var(--accent-color1);
