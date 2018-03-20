@@ -162,7 +162,8 @@ textarea {
   align-items: center;
   display: flex;
   margin-top: 50px;
-  background: black
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .mc-field-group{
@@ -175,7 +176,6 @@ textarea {
 #mce-EMAIL{
   flex: 1;
   height: 50px;
-  background: transparent;
   border: 0px;
   color: white;
   padding-left: 25px;
@@ -183,6 +183,8 @@ textarea {
   font-size: 20px;
   border-radius: 5px 0px 0px 5px;
   -webkit-appearance: none;
+  background: black
+  margin-bottom: 10px;
 }
 
 #mc-embedded-subscribe{
@@ -196,7 +198,7 @@ textarea {
   -webkit-appearance: none;
 }
 
-#mce_inline_error{
+.mce_inline_error{
   position: absolute;
   top: 100%;
   font-size: 13px;
