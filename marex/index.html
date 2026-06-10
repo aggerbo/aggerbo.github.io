@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Marex 370 — Boat Care</title>
+  <meta name="description" content="Service, checklists and todos for the Marex 370">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0c2d4d">
+
+  <!-- iOS: install via Share → Add to Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Marex 370">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <button id="backbtn" class="iconbtn hidden" data-action="back" aria-label="Back">‹</button>
+      <h1 id="title">Marex 370</h1>
+      <button id="gearbtn" class="iconbtn" data-action="settings" aria-label="Settings">⚙︎</button>
+    </header>
+
+    <main id="view" aria-live="polite"></main>
+
+    <nav id="tabbar">
+      <button data-tab="home"><span class="ticon">⚓️</span><span>Home</span></button>
+      <button data-tab="service"><span class="ticon">🔧</span><span>Service</span></button>
+      <button data-tab="lists"><span class="ticon">✅</span><span>Lists</span></button>
+      <button data-tab="todos"><span class="ticon">📝</span><span>Todos</span></button>
+      <button data-tab="guide"><span class="ticon">📖</span><span>Guide</span></button>
+    </nav>
+  </div>
+
+  <!-- bottom sheet for forms/details -->
+  <div id="sheet-backdrop" class="hidden" data-action="close-sheet"></div>
+  <div id="sheet" class="hidden" role="dialog" aria-modal="true"></div>
+
+  <!-- fullscreen photo viewer -->
+  <div id="viewer" class="hidden">
+    <img id="viewer-img" alt="Photo">
+    <div id="viewer-actions">
+      <button class="btn danger" data-action="viewer-delete">Delete photo</button>
+      <button class="btn" data-action="viewer-close">Close</button>
+    </div>
+  </div>
+
+  <!-- shared hidden file input for photos -->
+  <input type="file" id="photo-input" accept="image/*" class="hidden-input">
+
+  <script src="js/data.js"></script>
+  <script src="js/illustrations.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+    }
+  </script>
+</body>
+</html>
