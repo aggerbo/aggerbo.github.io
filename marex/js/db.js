@@ -2,6 +2,11 @@
 
 const STORE_KEY = "marex370.v1";
 
+// structuredClone needs iOS 15.4+; state is JSON-safe so this fallback is equivalent
+if (typeof structuredClone !== "function") {
+  window.structuredClone = o => JSON.parse(JSON.stringify(o));
+}
+
 const DEFAULT_STATE = {
   v: 1,
   settings: {
