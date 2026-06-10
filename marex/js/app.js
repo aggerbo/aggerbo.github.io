@@ -18,7 +18,7 @@ function todayISO() {
 function fmtDate(iso) {
   if (!iso) return "–";
   const d = new Date(iso + (iso.length === 10 ? "T12:00" : ""));
-  return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString(LANG === "da" ? "da-DK" : undefined, { day: "numeric", month: "short", year: "numeric" });
 }
 function addMonths(iso, m) {
   const d = new Date(iso + "T12:00");
@@ -30,12 +30,44 @@ function daysUntil(date) { return Math.floor((date - new Date()) / 86400000); }
 function allServices() { return SERVICES.concat(state.customServices || []); }
 function findService(id) { return allServices().find(s => s.id === id); }
 
+/* ---------- one-time data patches ---------- */
+
+/* Volvo service per Autohuset Vestergaard invoice 6339900:
+   full engine service 2026-04-28 at 973 h. */
+function applyPatches() {
+  state.patches = state.patches || {};
+  if (!state.patches.volvoService202604) {
+    const date = "2026-04-28", hours = 973;
+    const note = LANG === "da"
+      ? "Volvo-service (Autohuset Vestergaard, faktura 6339900)"
+      : "Volvo service (Autohuset Vestergaard, invoice 6339900)";
+    const done = {
+      oil: note, fuelfilter: note, airfilter: note, impeller: note,
+      belts: note + (LANG === "da" ? " — 2 nye remme" : " — 2 new belts"),
+      heatex: note, coolant: note, enginezinc: note + " — 2 stk.",
+    };
+    for (const [id, n] of Object.entries(done)) {
+      const log = (state.serviceLog[id] = state.serviceLog[id] || []);
+      if (!log.some(en => en.date === date)) {
+        log.unshift({ ts: Date.now(), date, hours, note: n, photos: [] });
+        log.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      }
+    }
+    if (state.settings.hours == null || state.settings.hours < hours) {
+      state.settings.hours = hours;
+      state.settings.hoursDate = date;
+    }
+    state.patches.volvoService202604 = true;
+    saveState();
+  }
+}
+
 /* ---------- service status ---------- */
 
 function serviceStatus(svc) {
   const entries = state.serviceLog[svc.id] || [];
   const last = entries[0];
-  if (!last) return { code: "unknown", label: "Not logged", detail: "Log when this was last done to start tracking." };
+  if (!last) return { code: "unknown", label: STR.st_unknown, detail: STR.log_first };
 
   const parts = [];
   let overdue = false, soon = false;
@@ -43,29 +75,38 @@ function serviceStatus(svc) {
   if (svc.intervalMonths && last.date) {
     const due = addMonths(last.date, svc.intervalMonths);
     const d = daysUntil(due);
-    if (d < 0) { overdue = true; parts.push(`${-d} days overdue`); }
-    else { if (d <= 30) soon = true; parts.push(`due ${fmtDate(due.toISOString().slice(0, 10))}`); }
+    if (d < 0) { overdue = true; parts.push(T("d_overdue", { n: -d })); }
+    else { if (d <= 30) soon = true; parts.push(T("d_due", { date: fmtDate(due.toISOString().slice(0, 10)) })); }
   }
   if (svc.intervalHours && last.hours != null && state.settings.hours != null) {
     const left = (last.hours + svc.intervalHours) - state.settings.hours;
-    if (left < 0) { overdue = true; parts.push(`${-left} h overdue`); }
-    else { if (left <= 25) soon = true; parts.push(`${left} h left`); }
+    if (left < 0) { overdue = true; parts.push(T("h_overdue", { n: -left })); }
+    else { if (left <= 25) soon = true; parts.push(T("h_left", { n: left })); }
   }
 
   const code = overdue ? "overdue" : soon ? "soon" : "ok";
-  const label = overdue ? "Overdue" : soon ? "Due soon" : "OK";
-  return { code, label, detail: parts.join(" · ") || "No interval tracked", last };
+  const label = overdue ? STR.st_overdue : soon ? STR.st_soon : STR.st_ok;
+  return { code, label, detail: parts.join(" · ") || STR.no_interval, last };
 }
 
 function intervalText(svc) {
   const bits = [];
-  if (svc.intervalHours) bits.push(`${svc.intervalHours} h`);
-  if (svc.intervalMonths) bits.push(svc.intervalMonths % 12 === 0 ? `${svc.intervalMonths / 12} yr` : `${svc.intervalMonths} mo`);
-  return bits.length ? "Every " + bits.join(" / ") : "As needed";
+  if (svc.intervalHours) bits.push(`${svc.intervalHours} ${STR.hr}`);
+  if (svc.intervalMonths) bits.push(svc.intervalMonths % 12 === 0 ? `${svc.intervalMonths / 12} ${STR.yr}` : `${svc.intervalMonths} ${STR.mo}`);
+  return bits.length ? STR.every + " " + bits.join(" / ") : STR.as_needed;
 }
 
-function addLog(type, title, detail, photos = []) {
-  state.log.unshift({ id: uid(), ts: Date.now(), type, title, detail, photos });
+function expiryStatus(x) {
+  const d = daysUntil(new Date(x.date + "T12:00"));
+  if (d < 0)  return { code: "overdue", label: STR.st_overdue, detail: T("expired_ago", { n: -d }) };
+  if (d <= 60) return { code: "soon", label: STR.st_soon, detail: T("expires_on", { date: fmtDate(x.date) }) };
+  return { code: "ok", label: STR.st_ok, detail: T("expires_on", { date: fmtDate(x.date) }) };
+}
+
+function addLog(type, title, detail, photos = [], extra = null) {
+  const entry = { id: uid(), ts: Date.now(), type, title, detail, photos };
+  if (extra) Object.assign(entry, extra);
+  state.log.unshift(entry);
   if (state.log.length > 500) state.log.length = 500;
 }
 
@@ -80,22 +121,27 @@ function go(tab, page = null, arg = null) {
 
 function render() {
   const view = $("#view");
-  $$("#tabbar button").forEach(b => b.classList.toggle("active", b.dataset.tab === nav.tab));
+  $$("#tabbar button").forEach(b => {
+    b.classList.toggle("active", b.dataset.tab === nav.tab);
+    b.querySelector(".tlabel").textContent = STR["tab_" + b.dataset.tab];
+  });
   const back = $("#backbtn");
   back.classList.toggle("hidden", !nav.page);
   $("#gearbtn").classList.toggle("hidden", !!nav.page);
 
-  let html = "", title = "Marex 370";
+  let html = "", title = STR.app_title;
   if (nav.page === "checklist")  { const l = CHECKLISTS.find(c => c.id === nav.arg); title = l.name; html = checklistView(l); }
   else if (nav.page === "guide-item") { const g = GUIDE.find(x => x.id === nav.arg); title = g.name; html = guideItemView(g); }
-  else if (nav.page === "log")   { title = "Logbook"; html = logView(); }
-  else if (nav.tab === "home")    { title = state.settings.boatName || "Marex 370"; html = homeView(); }
-  else if (nav.tab === "service") { title = "Service"; html = serviceView(); }
-  else if (nav.tab === "lists")   { title = "Checklists"; html = listsView(); }
-  else if (nav.tab === "todos")   { title = "Todos"; html = todosView(); }
-  else if (nav.tab === "guide")   { title = "Know your boat"; html = guideView(); }
+  else if (nav.page === "log")   { title = STR.title_log; html = logView(); }
+  else if (nav.tab === "home")    { title = state.settings.boatName || STR.app_title; html = homeView(); }
+  else if (nav.tab === "service") { title = STR.title_service; html = serviceView(); }
+  else if (nav.tab === "lists")   { title = STR.title_lists; html = listsView(); }
+  else if (nav.tab === "todos")   { title = STR.title_todos; html = todosView(); }
+  else if (nav.tab === "guide")   { title = STR.title_guide; html = guideView(); }
 
   $("#title").textContent = title;
+  $('[data-action="viewer-delete"]').textContent = STR.viewer_delete;
+  $('[data-action="viewer-close"]').textContent = STR.viewer_close;
   view.innerHTML = html;
   view.scrollTop = 0;
   hydratePhotos(view);
@@ -112,80 +158,76 @@ function homeView() {
     !localStorage.getItem("marex370.installHint");
 
   const due = allServices()
-    .map(svc => ({ svc, st: serviceStatus(svc) }))
+    .map(svc => ({ kind: "svc", id: svc.id, name: svc.name, st: serviceStatus(svc) }))
+    .concat((state.expiries || []).map(x => ({ kind: "exp", id: x.id, name: x.name, st: expiryStatus(x) })))
     .filter(x => x.st.code === "overdue" || x.st.code === "soon")
     .sort((a, b) => (a.st.code === "overdue" ? 0 : 1) - (b.st.code === "overdue" ? 0 : 1));
 
   const notLogged = allServices().filter(svc => serviceStatus(svc).code === "unknown").length;
-
   const recent = state.log.slice(0, 4);
 
   return `
   ${showInstall ? `
   <section class="card notice">
-    <strong>📲 Make it an app:</strong> tap the Share button below, then
-    <strong>Add to Home Screen</strong>. You get a real app icon, full screen,
-    and it works offline at sea.
-    <button class="btn small ghost" data-action="dismiss-install" style="margin-top:6px">Got it</button>
+    ${STR.install_hint}
+    <div><button class="btn small outline" data-action="dismiss-install">${STR.got_it}</button></div>
   </section>` : ""}
   <section class="card hero">
     <div class="hero-row">
       <div>
-        <div class="hero-label">Status</div>
-        <div class="hero-season">${onWater ? "🌊 In the water" : "🛠️ On land"}</div>
+        <div class="hero-label">${STR.status}</div>
+        <div class="hero-season">${onWater ? STR.in_water : STR.on_land}</div>
       </div>
-      <button class="btn small" data-action="toggle-season">${onWater ? "Haul out" : "Launch"}</button>
+      <button class="btn small outline" data-action="toggle-season">${onWater ? STR.btn_haulout : STR.btn_launch}</button>
     </div>
+    <div class="hero-sep"></div>
     <div class="hero-row">
       <div>
-        <div class="hero-label">Engine hours</div>
-        <div class="hero-hours">${s.hours != null ? esc(s.hours) + " h" : "— not set —"}</div>
-        ${s.hoursDate ? `<div class="muted tiny">updated ${fmtDate(s.hoursDate)}</div>` : ""}
+        <div class="hero-label">${STR.engine_hours}</div>
+        <div class="hero-hours">${s.hours != null ? esc(s.hours) + " " + STR.hr : STR.not_set}</div>
+        ${s.hoursDate ? `<div class="muted tiny">${T("updated_on", { date: fmtDate(s.hoursDate) })}</div>` : ""}
       </div>
-      <button class="btn small" data-action="edit-hours">Update</button>
+      <button class="btn small" data-action="edit-hours">${STR.btn_update}</button>
     </div>
   </section>
 
-  ${s.hours == null ? `
-  <section class="card notice">
-    <strong>Start here 👋</strong> Set your current engine hours (read them off the dash display),
-    then go through the Service tab and log roughly when each item was last done — a guess is fine.
-    From then on the app tells you what's due.
-  </section>` : ""}
+  ${s.hours == null ? `<section class="card notice">${STR.start_here}</section>` : ""}
 
   <section class="card">
-    <div class="card-head"><h2>Needs attention</h2><a data-action="goto-service">Service ›</a></div>
+    <div class="card-head"><h2>${STR.needs_attention}</h2><a data-action="goto-service">${STR.service_link}</a></div>
     ${due.length === 0
-      ? `<div class="empty">Nothing due. ${notLogged ? `${notLogged} items have no history yet — log them in Service.` : "She's all shipshape ✨"}</div>`
-      : due.slice(0, 6).map(({ svc, st }) => `
-        <div class="row" data-action="open-service" data-id="${svc.id}">
+      ? `<div class="empty">${STR.nothing_due} ${notLogged ? T("unlogged_hint", { n: notLogged }) : STR.all_good}</div>`
+      : due.slice(0, 6).map(x => `
+        <div class="row" data-action="${x.kind === "svc" ? "open-service" : "open-expiry"}" data-id="${x.id}">
           <div class="row-main">
-            <div class="row-title">${esc(svc.name)}</div>
-            <div class="row-sub">${esc(st.detail)}</div>
+            <div class="row-title">${esc(x.name)}</div>
+            <div class="row-sub">${esc(x.st.detail)}</div>
           </div>
-          <span class="pill ${st.code}">${st.label}</span>
+          <span class="pill ${x.st.code}">${x.st.label}</span>
         </div>`).join("")}
   </section>
 
   <section class="card">
-    <div class="card-head"><h2>Quick checklists</h2></div>
+    <div class="card-head"><h2>${STR.quick_lists}</h2></div>
     <div class="chip-row">
-      <button class="chip" data-action="open-list" data-id="pretrip">🧭 Before trip</button>
-      <button class="chip" data-action="open-list" data-id="posttrip">🏁 After trip</button>
-      <button class="chip" data-action="open-list" data-id="monthly">📅 Monthly</button>
+      <button class="chip" data-action="open-list" data-id="pretrip">${STR.chip_pretrip}</button>
+      <button class="chip" data-action="open-list" data-id="posttrip">${STR.chip_posttrip}</button>
+      <button class="chip" data-action="open-list" data-id="monthly">${STR.chip_monthly}</button>
     </div>
   </section>
 
   <section class="card">
-    <div class="card-head"><h2>Logbook</h2><a data-action="open-log">All ›</a></div>
-    ${recent.length === 0 ? `<div class="empty">Everything you do gets logged here.</div>`
-      : recent.map(logRow).join("")}
-    <button class="btn ghost wide" data-action="add-note">＋ Add note / photo</button>
+    <div class="card-head"><h2>${STR.logbook}</h2><a data-action="open-log">${STR.all_link}</a></div>
+    ${recent.length === 0 ? `<div class="empty">${STR.log_empty}</div>` : recent.map(logRow).join("")}
+    <div class="btn-row">
+      <button class="btn outline" data-action="add-trip">${STR.add_trip_btn}</button>
+      <button class="btn outline" data-action="add-note">${STR.add_note_btn}</button>
+    </div>
   </section>`;
 }
 
 function logRow(e) {
-  const icons = { service: "🔧", checklist: "✅", hours: "⏱", note: "📝", season: "⚓️", todo: "☑️" };
+  const icons = { service: "🔧", checklist: "✅", hours: "⏱", note: "📝", season: "⚓️", todo: "☑️", fuel: "⛽", trip: "🧭" };
   return `
   <div class="row" data-action="open-logentry" data-id="${e.id}">
     <div class="row-main">
@@ -197,7 +239,10 @@ function logRow(e) {
 
 function serviceView() {
   const baseline = state.settings.hours == null
-    ? `<section class="card notice">Set your engine hours on the Home tab first — hour-based intervals can't be tracked without it.</section>` : "";
+    ? `<section class="card notice">${STR.baseline_notice}</section>` : "";
+
+  const expiries = (state.expiries || []).slice()
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
 
   return baseline + SERVICE_GROUPS.map(g => {
     const items = allServices().filter(s => s.group === g.id);
@@ -210,16 +255,32 @@ function serviceView() {
         return `
         <div class="row" data-action="open-service" data-id="${svc.id}">
           <div class="row-main">
-            <div class="row-title">${esc(svc.name)}${svc.pro ? ' <span class="tag">workshop</span>' : ""}</div>
-            <div class="row-sub">${intervalText(svc)}${st.last ? ` · last ${fmtDate(st.last.date)}${st.last.hours != null ? " @ " + st.last.hours + " h" : ""}` : ""}</div>
+            <div class="row-title">${esc(svc.name)}${svc.pro ? ` <span class="tag">${STR.workshop}</span>` : ""}</div>
+            <div class="row-sub">${intervalText(svc)}${st.last ? ` · ${STR.last_lbl} ${fmtDate(st.last.date)}${st.last.hours != null ? " @ " + st.last.hours + " " + STR.hr : ""}` : ""}</div>
           </div>
           <span class="pill ${st.code}">${st.label}</span>
         </div>`;
       }).join("")}
     </section>`;
   }).join("") + `
-  <button class="btn ghost wide" data-action="add-service">＋ Add your own service item</button>
-  <div class="footnote">Intervals follow the Volvo Penta D-series schedule (whichever comes first: hours or calendar time). Adjust to your engine's manual if it differs.</div>`;
+  <section class="card">
+    <div class="card-head"><h2>${STR.expiry_card}</h2></div>
+    ${expiries.length === 0 ? `<div class="empty">${STR.expiry_hint}</div>`
+      : expiries.map(x => {
+        const st = expiryStatus(x);
+        return `
+        <div class="row" data-action="open-expiry" data-id="${x.id}">
+          <div class="row-main">
+            <div class="row-title">${esc(x.name)}</div>
+            <div class="row-sub">${esc(st.detail)}</div>
+          </div>
+          <span class="pill ${st.code}">${st.label}</span>
+        </div>`;
+      }).join("")}
+    <button class="btn outline wide" data-action="add-expiry">${STR.add_expiry_btn}</button>
+  </section>
+  <button class="btn outline wide" data-action="add-service">${STR.add_service_btn}</button>
+  <div class="footnote">${STR.svc_footnote}</div>`;
 }
 
 function listsView() {
@@ -236,7 +297,7 @@ function listsView() {
           <div class="row-title">${esc(l.name)}</div>
           <div class="row-sub">${esc(l.desc)}</div>
           <div class="progress"><div style="width:${total ? Math.round(done / total * 100) : 0}%"></div></div>
-          <div class="muted tiny">${done}/${total} checked${lastDone ? ` · last completed ${fmtDate(new Date(lastDone.ts).toISOString().slice(0, 10))}` : ""}</div>
+          <div class="muted tiny">${T("checked_lbl", { a: done, b: total })}${lastDone ? ` · ${T("last_completed", { date: fmtDate(new Date(lastDone.ts).toISOString().slice(0, 10)) })}` : ""}</div>
         </div>
         <div class="chev">›</div>
       </div>
@@ -254,7 +315,7 @@ function checklistView(l) {
   <section class="card">
     <p class="muted">${esc(l.desc)}</p>
     <div class="progress big"><div id="cl-bar" style="width:${Math.round(done / total * 100)}%"></div></div>
-    <div class="muted tiny" id="cl-count">${done} of ${total}</div>
+    <div class="muted tiny" id="cl-count">${T("of_lbl", { a: done, b: total })}</div>
   </section>
   ${l.sections.map((sec, si) => `
   <section class="card">
@@ -273,9 +334,9 @@ function checklistView(l) {
     }).join("")}
   </section>`).join("")}
   <button id="cl-complete" class="btn primary wide ${allDone ? "" : "disabled"}" data-action="complete-list" data-id="${l.id}">
-    ${allDone ? "✓ Log as completed" : `Check all ${total} items to complete`}
+    ${allDone ? STR.log_completed_btn : T("check_all_btn", { n: total })}
   </button>
-  <button class="btn ghost wide" data-action="reset-list" data-id="${l.id}">Reset checkboxes</button>`;
+  <button class="btn ghost wide" data-action="reset-list" data-id="${l.id}">${STR.reset_boxes}</button>`;
 }
 
 function todosView() {
@@ -284,17 +345,17 @@ function todosView() {
   return `
   <section class="card">
     <form class="add-row" data-action-submit="add-todo">
-      <input type="text" id="new-todo" placeholder="New todo… e.g. Buy spare impeller" maxlength="120">
-      <button class="btn primary" type="submit">Add</button>
+      <input type="text" id="new-todo" placeholder="${STR.todo_ph}" maxlength="120">
+      <button class="btn primary" type="submit">${STR.add_btn}</button>
     </form>
   </section>
   <section class="card">
-    <div class="card-head"><h2>To do (${open.length})</h2></div>
-    ${open.length === 0 ? `<div class="empty">Nothing on the list. Add things the moment you spot them aboard — with a photo.</div>` : open.map(todoRow).join("")}
+    <div class="card-head"><h2>${T("todo_head", { n: open.length })}</h2></div>
+    ${open.length === 0 ? `<div class="empty">${STR.todos_empty}</div>` : open.map(todoRow).join("")}
   </section>
   ${closed.length ? `
   <section class="card">
-    <div class="card-head"><h2>Done</h2></div>
+    <div class="card-head"><h2>${STR.done_head}</h2></div>
     ${closed.map(todoRow).join("")}
   </section>` : ""}`;
 }
@@ -313,10 +374,7 @@ function todoRow(t) {
 
 function guideView() {
   return `
-  <section class="card notice">
-    <strong>What am I looking at?</strong> Plain-language explanations of the parts you'll meet on your
-    Marex 370. Open each one and snap a photo of <em>your</em> boat's version — next season you'll thank yourself.
-  </section>
+  <section class="card notice">${STR.guide_intro}</section>
   ${GUIDE.map(g => `
   <div class="card tappable" data-action="open-guide" data-id="${g.id}">
     <div class="list-card">
@@ -335,23 +393,52 @@ function guideItemView(g) {
   return `
   <section class="card illus-card">${guideSVG(g.id)}</section>
   <section class="card">
-    <h3>What it is</h3><p>${esc(g.what)}</p>
-    <h3>Where to find it</h3><p>${esc(g.where)}</p>
-    <h3>What to look for</h3><p>${esc(g.look)}</p>
-    <h3>How often</h3><p>${esc(g.when)}</p>
+    <h3>${STR.what_is}</h3><p>${esc(g.what)}</p>
+    <h3>${STR.where_find}</h3><p>${esc(g.where)}</p>
+    <h3>${STR.what_look}</h3><p>${esc(g.look)}</p>
+    <h3>${STR.how_often}</h3><p>${esc(g.when)}</p>
   </section>
   <section class="card">
-    <div class="card-head"><h2>📷 Yours</h2></div>
-    <p class="muted tiny">Take a photo of this part on your boat so you always know what it looks like (and how it looked when healthy).</p>
+    <div class="card-head"><h2>${STR.yours}</h2></div>
+    <p class="muted tiny">${STR.yours_tip}</p>
     ${photoStrip(photos, { kind: "guide", id: g.id })}
+  </section>`;
+}
+
+function fuelSummary() {
+  const fills = state.log.filter(e => e.type === "fuel" && e.fuel);
+  if (!fills.length) return "";
+  const year = new Date().getFullYear();
+  const thisYear = fills.filter(e => new Date(e.ts).getFullYear() === year);
+  const liters = thisYear.reduce((n, e) => n + (e.fuel.liters || 0), 0);
+  const cost = thisYear.reduce((n, e) => n + (e.fuel.price || 0), 0);
+
+  // average L/h between the oldest and newest fill that recorded hours
+  const withHours = fills.filter(e => e.fuel.hours != null).sort((a, b) => a.fuel.hours - b.fuel.hours);
+  let rate = "";
+  if (withHours.length >= 2) {
+    const dh = withHours[withHours.length - 1].fuel.hours - withHours[0].fuel.hours;
+    const dl = withHours.slice(1).reduce((n, e) => n + (e.fuel.liters || 0), 0);
+    if (dh > 0 && dl > 0) rate = T("fuel_rate", { r: (dl / dh).toFixed(1) });
+  }
+  return `
+  <section class="card">
+    <div class="card-head"><h2>${STR.fuel_card}</h2></div>
+    <div class="stat">${T("fuel_total", { l: Math.round(liters) })}${cost ? T("fuel_cost", { p: Math.round(cost) }) : ""}</div>
+    ${rate ? `<div class="muted tiny">${rate}</div>` : ""}
   </section>`;
 }
 
 function logView() {
   return `
-  <button class="btn ghost wide" data-action="add-note">＋ Add note / photo</button>
+  <div class="btn-row">
+    <button class="btn outline" data-action="add-trip">${STR.add_trip_btn}</button>
+    <button class="btn outline" data-action="add-fuel">${STR.add_fuel_btn}</button>
+    <button class="btn outline" data-action="add-note">${STR.add_note_btn}</button>
+  </div>
+  ${fuelSummary()}
   <section class="card">
-    ${state.log.length === 0 ? `<div class="empty">No entries yet.</div>` : state.log.map(logRow).join("")}
+    ${state.log.length === 0 ? `<div class="empty">${STR.log_empty}</div>` : state.log.map(logRow).join("")}
   </section>`;
 }
 
@@ -361,7 +448,7 @@ function photoStrip(ids, ctx) {
   return `
   <div class="photo-strip">
     ${ids.map(id => `<img class="thumb" data-photo-id="${id}" data-action="view-photo" data-id="${id}" data-ctx='${esc(JSON.stringify(ctx))}' alt="">`).join("")}
-    <button class="thumb add" data-action="add-photo" data-ctx='${esc(JSON.stringify(ctx))}'>📷<br>Add</button>
+    <button class="thumb add" data-action="add-photo" data-ctx='${esc(JSON.stringify(ctx))}'>📷<br>${STR.add_photo_lbl}</button>
   </div>`;
 }
 
@@ -373,7 +460,6 @@ async function hydratePhotos(root) {
 }
 
 function photoOwnerArray(ctx) {
-  // returns the array that holds photo ids for a context
   if (ctx.kind === "guide") return state.guidePhotos[ctx.id] || (state.guidePhotos[ctx.id] = []);
   if (ctx.kind === "todo") { const t = state.todos.find(x => x.id === ctx.id); return t ? (t.photos || (t.photos = [])) : null; }
   if (ctx.kind === "log") { const e = state.log.find(x => x.id === ctx.id); return e ? (e.photos || (e.photos = [])) : null; }
@@ -401,12 +487,11 @@ $("#photo-input").addEventListener("change", async e => {
     if (arr) { arr.push(id); saveState(); }
     refreshPhotoUI();
   } catch (err) {
-    alert("Could not save the photo: " + err.message);
+    alert(T("photo_failed", { e: err.message }));
   }
 });
 
 function refreshPhotoUI() {
-  // re-render whichever surface is showing the strip
   if (!$("#sheet").classList.contains("hidden") && sheetRefresh) sheetRefresh();
   else render();
 }
@@ -440,17 +525,17 @@ function openServiceSheet(id) {
   const entries = state.serviceLog[id] || [];
   openSheet(`
     <h2>${esc(svc.name)} <span class="pill ${st.code}">${st.label}</span></h2>
-    <p class="muted">${intervalText(svc)}${svc.pro ? " · usually a workshop job" : ""}</p>
+    <p class="muted">${intervalText(svc)}${svc.pro ? " · " + STR.usually_workshop : ""}</p>
     <p>${esc(svc.why || "")}</p>
-    <button class="btn primary wide" data-action="mark-done-form" data-id="${id}">✓ Mark as done</button>
-    ${entries.length ? `<h3>History</h3>` + entries.map(en => `
+    <button class="btn primary wide" data-action="mark-done-form" data-id="${id}">${STR.mark_done_btn}</button>
+    ${entries.length ? `<h3>${STR.history}</h3>` + entries.map(en => `
       <div class="hist">
-        <div class="row-title">${fmtDate(en.date)}${en.hours != null ? ` · ${en.hours} h` : ""}</div>
+        <div class="row-title">${fmtDate(en.date)}${en.hours != null ? ` · ${en.hours} ${STR.hr}` : ""}</div>
         ${en.note ? `<div class="row-sub">${esc(en.note)}</div>` : ""}
         ${en.photos?.length ? `<div class="photo-strip">${en.photos.map(p =>
           `<img class="thumb" data-photo-id="${p}" data-action="view-photo" data-id="${p}" alt="">`).join("")}</div>` : ""}
-      </div>`).join("") : `<p class="muted tiny">No history yet. If you're not sure when it was last done, log your best guess — or log it as done at the next service.</p>`}
-    ${svc.custom ? `<button class="btn danger ghost wide" data-action="delete-service" data-id="${id}">Delete this item</button>` : ""}
+      </div>`).join("") : `<p class="muted tiny">${STR.no_history_tip}</p>`}
+    ${svc.custom ? `<button class="btn danger ghost wide" data-action="delete-service" data-id="${id}">${STR.delete_item_btn}</button>` : ""}
   `, () => openServiceSheet(id));
 }
 
@@ -458,19 +543,19 @@ function openMarkDoneSheet(id) {
   const svc = findService(id);
   pendingPhotos = [];
   const renderIt = () => openSheet(`
-    <h2>Done: ${esc(svc.name)}</h2>
-    <label class="field">Date
+    <h2>${T("done_prefix", { name: esc(svc.name) })}</h2>
+    <label class="field">${STR.date_lbl}
       <input type="date" id="md-date" value="${$("#md-date")?.value || todayISO()}" max="${todayISO()}">
     </label>
-    <label class="field">Engine hours at the time
-      <input type="number" id="md-hours" inputmode="numeric" placeholder="optional" value="${$("#md-hours")?.value ?? (state.settings.hours ?? "")}">
+    <label class="field">${STR.hours_at_lbl}
+      <input type="number" id="md-hours" inputmode="numeric" placeholder="${STR.optional_ph}" value="${$("#md-hours")?.value ?? (state.settings.hours ?? "")}">
     </label>
-    <label class="field">Notes
-      <textarea id="md-note" rows="2" placeholder="What was done, parts used, who did it…">${esc($("#md-note")?.value || "")}</textarea>
+    <label class="field">${STR.notes_lbl}
+      <textarea id="md-note" rows="2" placeholder="${STR.md_note_ph}">${esc($("#md-note")?.value || "")}</textarea>
     </label>
-    <div class="field"><span>Photos</span>${photoStrip(pendingPhotos, { kind: "pending" })}</div>
-    <button class="btn primary wide" data-action="save-done" data-id="${id}">Save</button>
-    <button class="btn ghost wide" data-action="close-sheet">Cancel</button>
+    <div class="field"><span>${STR.photos_lbl}</span>${photoStrip(pendingPhotos, { kind: "pending" })}</div>
+    <button class="btn primary wide" data-action="save-done" data-id="${id}">${STR.save}</button>
+    <button class="btn ghost wide" data-action="close-sheet">${STR.cancel}</button>
   `, renderIt);
   renderIt();
 }
@@ -480,7 +565,7 @@ function saveDone(id) {
   const date = $("#md-date").value || todayISO();
   const hoursRaw = $("#md-hours").value.trim();
   const hours = hoursRaw === "" ? null : Number(hoursRaw);
-  if (hours != null && (!isFinite(hours) || hours < 0)) { alert("Engine hours must be a positive number."); return; }
+  if (hours != null && (!isFinite(hours) || hours < 0)) { alert(STR.invalid_number); return; }
   const note = $("#md-note").value.trim();
 
   const entry = { ts: Date.now(), date, hours, note, photos: pendingPhotos.slice() };
@@ -491,23 +576,23 @@ function saveDone(id) {
     state.settings.hours = hours;
     state.settings.hoursDate = date;
   }
-  addLog("service", svc.name, `done ${fmtDate(date)}${hours != null ? " @ " + hours + " h" : ""}`, pendingPhotos.slice());
+  addLog("service", svc.name, `${fmtDate(date)}${hours != null ? " @ " + hours + " " + STR.hr : ""}`, pendingPhotos.slice());
   pendingPhotos = [];
   saveState();
   closeSheet(false);
   render();
 }
 
-/* ---------- sheets: hours / note / todo / settings / add service ---------- */
+/* ---------- sheets: hours / note / trip / fuel / todo / expiry / settings ---------- */
 
 function openHoursSheet() {
   openSheet(`
-    <h2>Engine hours</h2>
-    <p class="muted tiny">Read them off the engine display at the helm. Update after every trip — all hour-based service reminders build on this number.</p>
-    <label class="field">Current hours
-      <input type="number" id="hrs" inputmode="numeric" value="${state.settings.hours ?? ""}" placeholder="e.g. 412">
+    <h2>${STR.hours_title}</h2>
+    <p class="muted tiny">${STR.hours_tip}</p>
+    <label class="field">${STR.current_hours_lbl}
+      <input type="number" id="hrs" inputmode="numeric" value="${state.settings.hours ?? ""}" placeholder="${STR.hours_eg_ph}">
     </label>
-    <button class="btn primary wide" data-action="save-hours">Save</button>
+    <button class="btn primary wide" data-action="save-hours">${STR.save}</button>
   `);
   setTimeout(() => $("#hrs")?.focus(), 50);
 }
@@ -515,15 +600,55 @@ function openHoursSheet() {
 function openNoteSheet() {
   pendingPhotos = [];
   const renderIt = () => openSheet(`
-    <h2>Logbook note</h2>
-    <label class="field">Note
-      <textarea id="note-text" rows="3" placeholder="e.g. Odd vibration at 2500 rpm · checked prop, found rope">${esc($("#note-text")?.value || "")}</textarea>
+    <h2>${STR.note_title}</h2>
+    <label class="field">${STR.notes_lbl}
+      <textarea id="note-text" rows="3" placeholder="${STR.note_ph}">${esc($("#note-text")?.value || "")}</textarea>
     </label>
-    <div class="field"><span>Photos</span>${photoStrip(pendingPhotos, { kind: "pending" })}</div>
-    <button class="btn primary wide" data-action="save-note">Save</button>
-    <button class="btn ghost wide" data-action="close-sheet">Cancel</button>
+    <div class="field"><span>${STR.photos_lbl}</span>${photoStrip(pendingPhotos, { kind: "pending" })}</div>
+    <button class="btn primary wide" data-action="save-note">${STR.save}</button>
+    <button class="btn ghost wide" data-action="close-sheet">${STR.cancel}</button>
   `, renderIt);
   renderIt();
+}
+
+function openTripSheet() {
+  pendingPhotos = [];
+  const renderIt = () => openSheet(`
+    <h2>${STR.trip_title}</h2>
+    <label class="field">${STR.trip_where_lbl}
+      <input type="text" id="trip-where" maxlength="80" placeholder="${STR.trip_where_ph}" value="${esc($("#trip-where")?.value || "")}">
+    </label>
+    <label class="field">${STR.hours_after_lbl}
+      <input type="number" id="trip-hours" inputmode="decimal" step="0.1" placeholder="${STR.optional_ph}" value="${$("#trip-hours")?.value ?? (state.settings.hours ?? "")}">
+    </label>
+    <label class="field">${STR.notes_lbl}
+      <textarea id="trip-note" rows="2">${esc($("#trip-note")?.value || "")}</textarea>
+    </label>
+    <div class="field"><span>${STR.photos_lbl}</span>${photoStrip(pendingPhotos, { kind: "pending" })}</div>
+    <button class="btn primary wide" data-action="save-trip">${STR.save}</button>
+    <button class="btn ghost wide" data-action="close-sheet">${STR.cancel}</button>
+  `, renderIt);
+  renderIt();
+}
+
+function openFuelSheet() {
+  openSheet(`
+    <h2>${STR.fuel_title}</h2>
+    <label class="field">${STR.date_lbl}
+      <input type="date" id="fuel-date" value="${todayISO()}" max="${todayISO()}">
+    </label>
+    <label class="field">${STR.liters_lbl}
+      <input type="number" id="fuel-liters" inputmode="decimal" step="0.1" placeholder="${STR.liters_lbl}">
+    </label>
+    <label class="field">${STR.price_lbl}
+      <input type="number" id="fuel-price" inputmode="decimal" step="1" placeholder="${STR.optional_ph}">
+    </label>
+    <label class="field">${STR.hours_at_lbl}
+      <input type="number" id="fuel-hours" inputmode="decimal" step="0.1" placeholder="${STR.optional_ph}" value="${state.settings.hours ?? ""}">
+    </label>
+    <button class="btn primary wide" data-action="save-fuel">${STR.save}</button>
+    <button class="btn ghost wide" data-action="close-sheet">${STR.cancel}</button>
+  `);
 }
 
 function openTodoSheet(id) {
@@ -531,15 +656,30 @@ function openTodoSheet(id) {
   if (!t) return;
   const renderIt = () => openSheet(`
     <h2>${esc(t.title)}</h2>
-    <p class="muted tiny">Added ${fmtDate(new Date(t.created).toISOString().slice(0, 10))}${t.done ? " · done" : ""}</p>
-    <label class="field">Notes
-      <textarea id="todo-note" rows="3" data-action-input="todo-note" data-id="${t.id}" placeholder="Details, measurements, part numbers…">${esc(t.note || "")}</textarea>
+    <p class="muted tiny">${STR.added_lbl} ${fmtDate(new Date(t.created).toISOString().slice(0, 10))}${t.done ? " · " + STR.done_lbl : ""}</p>
+    <label class="field">${STR.notes_lbl}
+      <textarea id="todo-note" rows="3" data-action-input="todo-note" data-id="${t.id}" placeholder="${STR.todo_note_ph}">${esc(t.note || "")}</textarea>
     </label>
-    <div class="field"><span>Photos</span>${photoStrip(t.photos || [], { kind: "todo", id: t.id })}</div>
-    <button class="btn primary wide" data-action="toggle-todo-sheet" data-id="${t.id}">${t.done ? "Mark as not done" : "✓ Mark as done"}</button>
-    <button class="btn danger ghost wide" data-action="delete-todo" data-id="${t.id}">Delete</button>
+    <div class="field"><span>${STR.photos_lbl}</span>${photoStrip(t.photos || [], { kind: "todo", id: t.id })}</div>
+    <button class="btn primary wide" data-action="toggle-todo-sheet" data-id="${t.id}">${t.done ? STR.mark_undone_btn : STR.mark_done_btn}</button>
+    <button class="btn danger ghost wide" data-action="delete-todo" data-id="${t.id}">${STR.delete_btn}</button>
   `, renderIt);
   renderIt();
+}
+
+function openExpirySheet(id) {
+  const x = id ? (state.expiries || []).find(e => e.id === id) : null;
+  openSheet(`
+    <h2>${STR.expiry_new_title}</h2>
+    <label class="field">${STR.name_lbl}
+      <input type="text" id="exp-name" maxlength="60" placeholder="${STR.expiry_name_ph}" value="${esc(x?.name || "")}">
+    </label>
+    <label class="field">${STR.expiry_date_lbl}
+      <input type="date" id="exp-date" value="${x?.date || ""}">
+    </label>
+    <button class="btn primary wide" data-action="save-expiry" data-id="${x?.id || ""}">${STR.save}</button>
+    ${x ? `<button class="btn danger ghost wide" data-action="delete-expiry" data-id="${x.id}">${STR.delete_btn}</button>` : ""}
+  `);
 }
 
 function openLogEntrySheet(id) {
@@ -547,53 +687,59 @@ function openLogEntrySheet(id) {
   if (!e) return;
   openSheet(`
     <h2>${esc(e.title)}</h2>
-    <p class="muted tiny">${new Date(e.ts).toLocaleString()}</p>
+    <p class="muted tiny">${new Date(e.ts).toLocaleString(LANG === "da" ? "da-DK" : undefined)}</p>
     ${e.detail ? `<p>${esc(e.detail)}</p>` : ""}
     ${e.photos?.length ? `<div class="photo-strip">${e.photos.map(p =>
       `<img class="thumb" data-photo-id="${p}" data-action="view-photo" data-id="${p}" alt="">`).join("")}</div>` : ""}
-    <button class="btn danger ghost wide" data-action="delete-logentry" data-id="${e.id}">Delete entry</button>
+    <button class="btn danger ghost wide" data-action="delete-logentry" data-id="${e.id}">${STR.delete_entry_btn}</button>
   `, () => openLogEntrySheet(id));
 }
 
 function openSettingsSheet() {
   openSheet(`
-    <h2>Settings</h2>
-    <label class="field">Boat name
+    <h2>${STR.settings}</h2>
+    <label class="field">${STR.boat_name_lbl}
       <input type="text" id="set-name" value="${esc(state.settings.boatName)}" maxlength="40">
     </label>
-    <label class="field">Engine
+    <label class="field">${STR.engine_lbl}
       <input type="text" id="set-engine" value="${esc(state.settings.engine)}" maxlength="40">
     </label>
-    <button class="btn primary wide" data-action="save-settings">Save</button>
-    <h3>Backup</h3>
-    <p class="muted tiny">Data lives only on this phone. Export a backup now and then (photos are not included in the file — they stay on the device).</p>
-    <button class="btn wide" data-action="export-data">⬇️ Export backup</button>
-    <button class="btn wide" data-action="import-data">⬆️ Import backup</button>
+    <label class="field">${STR.language_lbl}
+      <select id="set-lang">
+        <option value="da" ${LANG === "da" ? "selected" : ""}>Dansk</option>
+        <option value="en" ${LANG === "en" ? "selected" : ""}>English</option>
+      </select>
+    </label>
+    <button class="btn primary wide" data-action="save-settings">${STR.save}</button>
+    <h3>${STR.backup_head}</h3>
+    <p class="muted tiny">${STR.backup_tip}</p>
+    <button class="btn outline wide" data-action="export-data">${STR.export_btn}</button>
+    <button class="btn outline wide" data-action="import-data">${STR.import_btn}</button>
     <input type="file" id="import-input" accept="application/json" class="hidden-input">
-    <h3>Danger zone</h3>
-    <button class="btn danger ghost wide" data-action="wipe-data">Erase all data</button>
+    <h3>${STR.danger_head}</h3>
+    <button class="btn danger ghost wide" data-action="wipe-data">${STR.erase_btn}</button>
   `);
 }
 
 function openAddServiceSheet() {
   openSheet(`
-    <h2>New service item</h2>
-    <label class="field">Name
-      <input type="text" id="ns-name" placeholder="e.g. Generator oil change" maxlength="60">
+    <h2>${STR.ns_title}</h2>
+    <label class="field">${STR.name_lbl}
+      <input type="text" id="ns-name" placeholder="${STR.ns_name_ph}" maxlength="60">
     </label>
-    <label class="field">Group
+    <label class="field">${STR.group_lbl}
       <select id="ns-group">${SERVICE_GROUPS.map(g => `<option value="${g.id}">${g.icon} ${esc(g.name)}</option>`).join("")}</select>
     </label>
-    <label class="field">Interval — engine hours (blank = none)
-      <input type="number" id="ns-hours" inputmode="numeric" placeholder="e.g. 200">
+    <label class="field">${STR.ns_hours_lbl}
+      <input type="number" id="ns-hours" inputmode="numeric" placeholder="200">
     </label>
-    <label class="field">Interval — months (blank = none)
-      <input type="number" id="ns-months" inputmode="numeric" placeholder="e.g. 12">
+    <label class="field">${STR.ns_months_lbl}
+      <input type="number" id="ns-months" inputmode="numeric" placeholder="12">
     </label>
-    <label class="field">Notes
-      <textarea id="ns-why" rows="2" placeholder="Why / how"></textarea>
+    <label class="field">${STR.ns_why_lbl}
+      <textarea id="ns-why" rows="2" placeholder="${STR.ns_why_ph}"></textarea>
     </label>
-    <button class="btn primary wide" data-action="save-service">Add item</button>
+    <button class="btn primary wide" data-action="save-service">${STR.add_item_btn}</button>
   `);
 }
 
@@ -619,12 +765,10 @@ document.addEventListener("click", async e => {
       const toWater = state.settings.season !== "water";
       const list = toWater ? "launch" : "haulout";
       state.settings.season = toWater ? "water" : "land";
-      addLog("season", toWater ? "Launched — in the water 🌊" : "Hauled out — on land 🛠️", "");
+      addLog("season", toWater ? STR.season_water_log : STR.season_land_log, "");
       saveState(); render();
       setTimeout(() => {
-        if (confirm(toWater
-          ? "She's in the water! Open the spring launch checklist?"
-          : "Hauled out. Open the haul-out & winterization checklist?")) go("lists", "checklist", list);
+        if (confirm(toWater ? STR.launch_prompt : STR.haulout_prompt)) go("lists", "checklist", list);
       }, 100);
       break;
     }
@@ -632,12 +776,14 @@ document.addEventListener("click", async e => {
     case "edit-hours": openHoursSheet(); break;
     case "save-hours": {
       const v = Number($("#hrs").value);
-      if (!isFinite(v) || v < 0) { alert("Enter a valid number."); break; }
+      if (!isFinite(v) || v < 0) { alert(STR.invalid_number); break; }
       if (state.settings.hours != null && v < state.settings.hours &&
-          !confirm(`That's lower than the current ${state.settings.hours} h. Save anyway?`)) break;
+          !confirm(T("lower_confirm", { n: state.settings.hours }))) break;
+      const prev = state.settings.hours;
       state.settings.hours = v;
       state.settings.hoursDate = todayISO();
-      addLog("hours", "Engine hours updated", v + " h");
+      const delta = prev != null && v > prev ? ` (+${Math.round((v - prev) * 10) / 10} ${STR.hr})` : "";
+      addLog("hours", STR.hours_updated, v + " " + STR.hr + delta);
       saveState(); closeSheet(); render();
       break;
     }
@@ -647,7 +793,7 @@ document.addEventListener("click", async e => {
     case "mark-done-form": openMarkDoneSheet(id); break;
     case "save-done": saveDone(id); break;
     case "delete-service": {
-      if (!confirm("Delete this service item and its history?")) break;
+      if (!confirm(STR.delete_item_confirm)) break;
       state.customServices = state.customServices.filter(s => s.id !== id);
       delete state.serviceLog[id];
       saveState(); closeSheet(); render();
@@ -656,13 +802,33 @@ document.addEventListener("click", async e => {
     case "add-service": openAddServiceSheet(); break;
     case "save-service": {
       const name = $("#ns-name").value.trim();
-      if (!name) { alert("Give it a name."); break; }
+      if (!name) { alert(STR.give_name); break; }
       const h = Number($("#ns-hours").value) || null;
       const m = Number($("#ns-months").value) || null;
       state.customServices.push({
         id: uid(), custom: true, name, group: $("#ns-group").value,
         intervalHours: h, intervalMonths: m, why: $("#ns-why").value.trim(),
       });
+      saveState(); closeSheet(); render();
+      break;
+    }
+
+    case "add-expiry": openExpirySheet(null); break;
+    case "open-expiry": openExpirySheet(id); break;
+    case "save-expiry": {
+      const name = $("#exp-name").value.trim();
+      const date = $("#exp-date").value;
+      if (!name || !date) { alert(STR.give_name); break; }
+      state.expiries = state.expiries || [];
+      const x = state.expiries.find(e2 => e2.id === id);
+      if (x) { x.name = name; x.date = date; }
+      else state.expiries.push({ id: uid(), name, date });
+      saveState(); closeSheet(); render();
+      break;
+    }
+    case "delete-expiry": {
+      if (!confirm(STR.delete_expiry_confirm)) break;
+      state.expiries = (state.expiries || []).filter(e2 => e2.id !== id);
       saveState(); closeSheet(); render();
       break;
     }
@@ -676,14 +842,14 @@ document.addEventListener("click", async e => {
       (st.completions = st.completions || []).unshift({ ts: Date.now() });
       st.checked = {};
       state.checklists[id] = st;
-      addLog("checklist", l.name + " completed", `${total} items`);
+      addLog("checklist", T("list_completed_log", { name: l.name }), T("items_lbl", { n: total }));
       saveState();
-      alert("Logged! ✓ The checklist has been reset for next time.");
+      alert(STR.completed_alert);
       go("lists");
       break;
     }
     case "reset-list": {
-      if (!confirm("Uncheck everything?")) break;
+      if (!confirm(STR.reset_confirm)) break;
       (state.checklists[id] = state.checklists[id] || {}).checked = {};
       saveState(); render();
       break;
@@ -694,7 +860,7 @@ document.addEventListener("click", async e => {
       if (!t) break;
       t.done = !t.done;
       t.doneAt = t.done ? Date.now() : null;
-      if (t.done) addLog("todo", "Todo done: " + t.title, "");
+      if (t.done) addLog("todo", T("todo_done_log", { t: t.title }), "");
       saveState();
       if (a === "toggle-todo-sheet") closeSheet();
       render();
@@ -702,7 +868,7 @@ document.addEventListener("click", async e => {
     }
     case "open-todo": openTodoSheet(id); break;
     case "delete-todo": {
-      if (!confirm("Delete this todo?")) break;
+      if (!confirm(STR.delete_todo_confirm)) break;
       const t = state.todos.find(x => x.id === id);
       (t?.photos || []).forEach(p => deletePhoto(p));
       state.todos = state.todos.filter(x => x.id !== id);
@@ -714,7 +880,7 @@ document.addEventListener("click", async e => {
     case "open-log": go(nav.tab, "log"); break;
     case "open-logentry": openLogEntrySheet(id); break;
     case "delete-logentry": {
-      if (!confirm("Delete this log entry?")) break;
+      if (!confirm(STR.delete_log_confirm)) break;
       const en = state.log.find(x => x.id === id);
       (en?.photos || []).forEach(p => deletePhoto(p));
       state.log = state.log.filter(x => x.id !== id);
@@ -725,10 +891,52 @@ document.addEventListener("click", async e => {
     case "add-note": openNoteSheet(); break;
     case "save-note": {
       const txt = $("#note-text").value.trim();
-      if (!txt && pendingPhotos.length === 0) { alert("Write something or add a photo."); break; }
-      addLog("note", txt || "Photo", "", pendingPhotos.slice());
+      if (!txt && pendingPhotos.length === 0) { alert(STR.note_empty_alert); break; }
+      addLog("note", txt || STR.photo_word, "", pendingPhotos.slice());
       pendingPhotos = [];
       saveState(); closeSheet(false); render();
+      break;
+    }
+
+    case "add-trip": openTripSheet(); break;
+    case "save-trip": {
+      const where = $("#trip-where").value.trim();
+      const hoursRaw = $("#trip-hours").value.trim();
+      const hours = hoursRaw === "" ? null : Number(hoursRaw);
+      if (hours != null && (!isFinite(hours) || hours < 0)) { alert(STR.invalid_number); break; }
+      if (!where && hours == null) { alert(STR.note_empty_alert); break; }
+      const note = $("#trip-note").value.trim();
+      let detail = "";
+      if (hours != null) {
+        const prev = state.settings.hours;
+        if (prev != null && hours > prev) detail = `+${Math.round((hours - prev) * 10) / 10} ${STR.hr}`;
+        if (prev == null || hours > prev) {
+          state.settings.hours = hours;
+          state.settings.hoursDate = todayISO();
+        }
+      }
+      if (note) detail = detail ? detail + " · " + note : note;
+      addLog("trip", where || STR.trip_word, detail, pendingPhotos.slice());
+      pendingPhotos = [];
+      saveState(); closeSheet(false); render();
+      break;
+    }
+
+    case "add-fuel": openFuelSheet(); break;
+    case "save-fuel": {
+      const liters = Number($("#fuel-liters").value);
+      if (!isFinite(liters) || liters <= 0) { alert(STR.liters_invalid); break; }
+      const price = Number($("#fuel-price").value) || null;
+      const hoursRaw = $("#fuel-hours").value.trim();
+      const hours = hoursRaw === "" ? null : Number(hoursRaw);
+      const date = $("#fuel-date").value || todayISO();
+      if (hours != null && (state.settings.hours == null || hours > state.settings.hours)) {
+        state.settings.hours = hours;
+        state.settings.hoursDate = date;
+      }
+      addLog("fuel", STR.fuel_word, `${liters} L${price ? " · " + price + " kr" : ""}`, [],
+        { fuel: { liters, price, hours, date } });
+      saveState(); closeSheet(); render();
       break;
     }
 
@@ -743,9 +951,8 @@ document.addEventListener("click", async e => {
     }
     case "viewer-close": $("#viewer").classList.add("hidden"); break;
     case "viewer-delete": {
-      if (!viewerInfo || !confirm("Delete this photo?")) break;
+      if (!viewerInfo || !confirm(STR.delete_photo_confirm)) break;
       const { id: pid } = viewerInfo;
-      // remove from any owner that contains it
       const owners = [
         ...Object.values(state.guidePhotos),
         ...state.todos.map(t => t.photos || []),
@@ -767,6 +974,11 @@ document.addEventListener("click", async e => {
     case "save-settings": {
       state.settings.boatName = $("#set-name").value.trim() || "Marex 370";
       state.settings.engine = $("#set-engine").value.trim();
+      const lang = $("#set-lang").value;
+      if (lang !== state.settings.lang) {
+        state.settings.lang = lang;
+        applyLang(lang);
+      }
       saveState(); closeSheet(); render();
       break;
     }
@@ -786,18 +998,19 @@ document.addEventListener("click", async e => {
         if (!f) return;
         f.text().then(txt => {
           const data = JSON.parse(txt);
-          if (!data || data.v !== 1) throw new Error("Not a valid backup file");
-          if (!confirm("Replace all current data with this backup?")) return;
+          if (!data || data.v !== 1) throw new Error(STR.not_backup);
+          if (!confirm(STR.import_confirm)) return;
           state = Object.assign(structuredClone(DEFAULT_STATE), data);
+          applyLang(state.settings.lang || "da");
           saveState(); closeSheet(); render();
-        }).catch(err => alert("Import failed: " + err.message));
+        }).catch(err => alert(T("import_failed", { e: err.message })));
       };
       input.click();
       break;
     }
     case "wipe-data": {
-      if (!confirm("Erase ALL data? This cannot be undone.")) break;
-      if (!confirm("Really sure? Service history, todos and photos will be gone.")) break;
+      if (!confirm(STR.erase_c1)) break;
+      if (!confirm(STR.erase_c2)) break;
       localStorage.removeItem(STORE_KEY);
       indexedDB.deleteDatabase("marex370-photos");
       location.reload();
@@ -821,10 +1034,10 @@ document.addEventListener("change", e => {
     const done = Object.values(st.checked).filter(Boolean).length;
     const bar = $("#cl-bar"), count = $("#cl-count"), btn = $("#cl-complete");
     if (bar) bar.style.width = Math.round(done / total * 100) + "%";
-    if (count) count.textContent = `${done} of ${total}`;
+    if (count) count.textContent = T("of_lbl", { a: done, b: total });
     if (btn) {
       btn.classList.toggle("disabled", done < total);
-      btn.textContent = done < total ? `Check all ${total} items to complete` : "✓ Log as completed";
+      btn.textContent = done < total ? T("check_all_btn", { n: total }) : STR.log_completed_btn;
     }
   }
 });
@@ -852,4 +1065,6 @@ document.addEventListener("submit", e => {
 });
 
 /* ---------- go ---------- */
+applyLang(state.settings.lang || "da");
+applyPatches();
 render();
