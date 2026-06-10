@@ -1,12 +1,14 @@
 /* Offline support: pre-cache the app shell, serve cache-first.
    Bump VERSION on every deploy so clients pick up changes. */
-const VERSION = "v1.0.0";
+const VERSION = "v2.0.0";
 const CACHE = "marex370-" + VERSION;
 const SHELL = [
   "./",
   "index.html",
   "css/app.css",
-  "js/data.js",
+  "js/i18n.js",
+  "js/content-en.js",
+  "js/content-da.js",
   "js/illustrations.js",
   "js/db.js",
   "js/app.js",

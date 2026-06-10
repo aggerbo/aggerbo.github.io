@@ -11,10 +11,11 @@ const DEFAULT_STATE = {
   v: 1,
   settings: {
     boatName: "Marex 370 ACC",
-    engine: "Volvo Penta D6-435",
+    engine: "Volvo Penta D6",
     hours: null,          // current engine hours
     hoursDate: null,      // ISO date hours were last updated
     season: "water",      // "water" | "land"
+    lang: "da",           // "da" | "en"
   },
   serviceLog: {},         // serviceId -> [{ts, date, hours, note, photos:[]}], newest first
   customServices: [],     // user-added service items
@@ -22,6 +23,8 @@ const DEFAULT_STATE = {
   todos: [],              // {id, title, note, created, due, done, doneAt, photos:[]}
   log: [],                // {id, ts, type, title, detail, photos:[]}, newest first
   guidePhotos: {},        // guideId -> [photoId]
+  expiries: [],           // {id, name, date} — flares, extinguishers, vest cartridges…
+  patches: {},            // one-time data migrations already applied
 };
 
 let state = loadState();

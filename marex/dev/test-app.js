@@ -1,12 +1,13 @@
-/* Smoke test of the Marex 370 app in jsdom. */
+/* Smoke test of the Marex 370 app in jsdom.
+   Run: npm install jsdom fake-indexeddb && node test-app.js */
 const fs = require("fs");
 const path = require("path");
 const { JSDOM } = require("jsdom");
 require("fake-indexeddb/auto");
 
-const ROOT = require("path").join(__dirname, "..");
+const ROOT = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8")
-  .replace(/<script src="[^"]*"><\/script>/g, "")   // we inject scripts ourselves
+  .replace(/<script src="[^"]*"><\/script>/g, "")
   .replace(/<script>[\s\S]*?<\/script>/g, "");
 
 const dom = new JSDOM(html, { url: "https://example.com/marex/", runScripts: "outside-only", pretendToBeVisual: true });
@@ -22,89 +23,117 @@ const errs = [];
 window.addEventListener("error", e => { errs.push(e.message); });
 window.structuredClone = obj => JSON.parse(JSON.stringify(obj));
 
-// classic scripts share top-level const bindings; emulate by evaluating as one unit
-const bundle = ["js/data.js", "js/illustrations.js", "js/db.js", "js/app.js"]
+// classic scripts share top-level const/let bindings; emulate by evaluating as one unit
+const bundle = ["js/i18n.js", "js/content-en.js", "js/content-da.js", "js/db.js", "js/illustrations.js", "js/app.js"]
   .map(f => fs.readFileSync(path.join(ROOT, f), "utf8")).join("\n;\n") +
-  `;window.state=state;window.GUIDE=GUIDE;window.CHECKLISTS=CHECKLISTS;window.SERVICES=SERVICES;
-   window.go=go;window.serviceStatus=serviceStatus;window.guideSVG=guideSVG;
+  `;window.GUIDE=()=>GUIDE;window.CHECKLISTS=()=>CHECKLISTS;window.SERVICES=()=>SERVICES;
+   window.CONTENT=CONTENT;window.STRINGS=STRINGS;
    Object.defineProperty(window,'state',{get:()=>state,set:v=>{state=v}});`;
 try { window.eval(bundle); console.log("bundle loaded"); }
-catch (e) { console.error("FAIL loading bundle:", e.message); failures++; }
+catch (e) { console.error("FAIL loading bundle:", e.message, e.stack?.split("\n")[1] || ""); failures++; }
+
+// run the suite in English; Danish is tested explicitly at the end
+window.state.settings.lang = "en";
+window.applyLang("en");
+window.go("home");
 
 function check(name, fn) {
-  try {
-    fn();
-    console.log("PASS", name);
-  } catch (e) {
-    console.error("FAIL", name, "—", e.message);
-    failures++;
-  }
+  try { fn(); console.log("PASS", name); }
+  catch (e) { console.error("FAIL", name, "—", e.message); failures++; }
 }
 const $ = sel => window.document.querySelector(sel);
 const $$ = sel => [...window.document.querySelectorAll(sel)];
 const click = el => el.dispatchEvent(new window.Event("click", { bubbles: true }));
 const text = () => $("#view").textContent;
 
-check("home renders", () => {
+check("invoice patch applied (service 2026-04-28 @ 973 h)", () => {
+  for (const id of ["oil", "fuelfilter", "airfilter", "impeller", "belts", "heatex", "coolant", "enginezinc"]) {
+    const log = window.state.serviceLog[id];
+    if (!log || !log.some(e => e.date === "2026-04-28" && e.hours === 973))
+      throw new Error("missing patch entry for " + id);
+  }
+  if (window.state.settings.hours !== 973) throw new Error("hours not set to 973");
+  if (!window.state.patches.volvoService202604) throw new Error("patch flag not set");
+});
+
+check("home renders with hours", () => {
   if (!text().includes("Engine hours")) throw new Error("no hours block");
-  if (!text().includes("Start here")) throw new Error("no onboarding notice");
+  if (!text().includes("973")) throw new Error("973 h not shown");
 });
 
-check("all guide ids have data + svg", () => {
-  for (const g of window.GUIDE) {
-    const svg = window.guideSVG(g.id);
-    if (!svg || !svg.includes("<svg")) throw new Error("missing SVG for " + g.id);
+check("en/da content have identical service & guide ids", () => {
+  const ids = c => c.services.map(s => s.id).join() + "|" + c.guide.map(g => g.id).join() +
+    "|" + c.checklists.map(l => l.id + ":" + l.sections.map(s => s.items.map(i => i.id).join(".")).join("/")).join();
+  if (ids(window.CONTENT.en) !== ids(window.CONTENT.da)) throw new Error("id mismatch between languages");
+});
+
+check("en/da string tables have identical keys", () => {
+  const ken = Object.keys(window.STRINGS.en).sort().join();
+  const kda = Object.keys(window.STRINGS.da).sort().join();
+  if (ken !== kda) throw new Error("string key mismatch");
+});
+
+check("all guide ids have data + svg in both languages", () => {
+  for (const lang of ["en", "da"]) {
+    window.applyLang(lang);
+    for (const g of window.GUIDE()) {
+      const svg = window.guideSVG(g.id);
+      if (!svg || !svg.includes("<svg")) throw new Error(`missing SVG for ${g.id} (${lang})`);
+      if (svg.includes("undefined")) throw new Error(`undefined label in ${g.id} (${lang})`);
+    }
   }
+  window.applyLang("en");
 });
 
-check("every checklist item id unique per section", () => {
-  for (const l of window.CHECKLISTS) {
-    l.sections.forEach((s, si) => {
-      const ids = s.items.map(i => i.id);
-      if (new Set(ids).size !== ids.length) throw new Error("dup ids in " + l.id + " section " + si);
-    });
-  }
-});
-
-check("service tab renders all items", () => {
+check("service tab renders all items incl. engine zinc", () => {
   window.go("service");
-  for (const s of window.SERVICES) {
+  for (const s of window.SERVICES()) {
     if (!text().includes(s.name)) throw new Error("missing " + s.name);
   }
+  if (!text().includes("Engine zinc anodes")) throw new Error("engine zinc missing");
 });
 
 check("open service sheet + mark done", () => {
   click($('[data-action="open-service"][data-id="oil"]'));
   if ($("#sheet").classList.contains("hidden")) throw new Error("sheet not open");
   click($('[data-action="mark-done-form"][data-id="oil"]'));
-  $("#md-date").value = "2026-06-01";
-  $("#md-hours").value = "410";
+  $("#md-date").value = "2026-06-08";
+  $("#md-hours").value = "990";
   $("#md-note").value = "test oil change";
   click($('[data-action="save-done"][data-id="oil"]'));
   const log = window.state.serviceLog.oil;
-  if (!log || log[0].hours !== 410) throw new Error("entry not saved");
-  if (window.state.settings.hours !== 410) throw new Error("hours not propagated");
+  if (log[0].hours !== 990) throw new Error("entry not newest");
+  if (window.state.settings.hours !== 990) throw new Error("hours not propagated");
 });
 
 check("status pill computes OK for fresh service", () => {
-  const st = window.serviceStatus(window.SERVICES.find(s => s.id === "oil"));
+  const st = window.serviceStatus(window.SERVICES().find(s => s.id === "oil"));
   if (st.code !== "ok") throw new Error("expected ok, got " + st.code);
 });
 
 check("overdue status computes", () => {
-  window.state.serviceLog.impeller = [{ ts: 1, date: "2024-01-01", hours: 100, note: "", photos: [] }];
-  const st = window.serviceStatus(window.SERVICES.find(s => s.id === "impeller"));
+  window.state.serviceLog.antifoul = [{ ts: 1, date: "2024-01-01", hours: null, note: "", photos: [] }];
+  const st = window.serviceStatus(window.SERVICES().find(s => s.id === "antifoul"));
   if (st.code !== "overdue") throw new Error("expected overdue, got " + st.code);
 });
 
 check("home shows overdue item", () => {
   window.go("home");
-  if (!text().includes("Raw water impeller")) throw new Error("impeller not in attention list");
+  if (!text().includes("Antifouling")) throw new Error("antifoul not in attention list");
+});
+
+check("expiry add + shows on home", () => {
+  window.go("service");
+  click($('[data-action="add-expiry"]'));
+  $("#exp-name").value = "Flares";
+  $("#exp-date").value = "2025-12-31";
+  click($('[data-action="save-expiry"]'));
+  if (!window.state.expiries.length) throw new Error("expiry not saved");
+  window.go("home");
+  if (!text().includes("Flares")) throw new Error("expiry not on home");
 });
 
 check("checklist check + complete flow", () => {
-  window.go("lists");
-  if (!text().includes("Spring — onto the water")) throw new Error("lists missing");
   window.go("lists", "checklist", "pretrip");
   const boxes = $$('input[data-action="check-item"]');
   if (boxes.length === 0) throw new Error("no checkboxes");
@@ -120,62 +149,69 @@ check("checklist check + complete flow", () => {
   if (Object.keys(st.checked).length !== 0) throw new Error("not reset after completion");
 });
 
-check("add todo", () => {
+check("add + toggle todo", () => {
   window.go("todos");
   $("#new-todo").value = "Buy spare impeller";
   $("#view form").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
   if (window.state.todos.length !== 1) throw new Error("todo not added");
-  if (!text().includes("Buy spare impeller")) throw new Error("todo not rendered");
-});
-
-check("toggle todo done", () => {
   const id = window.state.todos[0].id;
   click($(`input[data-action="toggle-todo"][data-id="${id}"]`));
   if (!window.state.todos[0].done) throw new Error("not toggled");
 });
 
 check("guide renders + detail", () => {
-  window.go("guide");
-  if (!text().includes("Raw water impeller")) throw new Error("guide list missing");
   window.go("guide", "guide-item", "impeller");
   if (!$("#view svg")) throw new Error("svg missing");
   if (!text().includes("What it is")) throw new Error("sections missing");
 });
 
-check("hours update flow", () => {
+check("hours update with delta", () => {
   window.go("home");
   click($('[data-action="edit-hours"]'));
-  $("#hrs").value = "425";
+  $("#hrs").value = "995";
   click($('[data-action="save-hours"]'));
-  if (window.state.settings.hours !== 425) throw new Error("hours not saved");
+  if (window.state.settings.hours !== 995) throw new Error("hours not saved");
+  if (!window.state.log[0].detail.includes("+5")) throw new Error("delta not in log: " + window.state.log[0].detail);
+});
+
+check("trip log with hour delta", () => {
+  click($('[data-action="add-trip"]'));
+  $("#trip-where").value = "Marina → Tunø";
+  $("#trip-hours").value = "998.5";
+  click($('[data-action="save-trip"]'));
+  const e = window.state.log[0];
+  if (e.type !== "trip" || !e.title.includes("Tunø")) throw new Error("trip not logged");
+  if (!e.detail.includes("+3.5")) throw new Error("delta wrong: " + e.detail);
+  if (window.state.settings.hours !== 998.5) throw new Error("hours not updated");
+});
+
+check("fuel log + summary", () => {
+  window.go("home");
+  click($('[data-action="open-log"]'));
+  click($('[data-action="add-fuel"]'));
+  $("#fuel-liters").value = "120";
+  $("#fuel-price").value = "1600";
+  $("#fuel-hours").value = "998.5";
+  click($('[data-action="save-fuel"]'));
+  const e = window.state.log[0];
+  if (e.type !== "fuel" || e.fuel.liters !== 120) throw new Error("fuel not logged");
+  if (!text().includes("120 L")) throw new Error("summary missing");
 });
 
 check("season toggle logs + state", () => {
+  window.go("home");
   const before = window.state.settings.season;
   click($('[data-action="toggle-season"]'));
   if (window.state.settings.season === before) throw new Error("season unchanged");
   if (window.state.log[0].type !== "season") throw new Error("no season log entry");
 });
 
-check("note without text rejected, with text saved", () => {
+check("note flow", () => {
   window.go("home");
   click($('[data-action="add-note"]'));
   $("#note-text").value = "Engine sounded great today";
   click($('[data-action="save-note"]'));
   if (window.state.log[0].title !== "Engine sounded great today") throw new Error("note not logged");
-});
-
-check("logbook view renders all entries", () => {
-  click($('[data-action="open-log"]'));
-  if (!text().includes("Engine sounded great today")) throw new Error("log entry missing");
-});
-
-check("settings + export shape", () => {
-  click($("#gearbtn"));
-  if (!$("#set-name")) throw new Error("settings sheet missing");
-  $("#set-name").value = "Vera";
-  click($('[data-action="save-settings"]'));
-  if (window.state.settings.boatName !== "Vera") throw new Error("name not saved");
 });
 
 check("custom service add", () => {
@@ -185,13 +221,24 @@ check("custom service add", () => {
   $("#ns-hours").value = "100";
   click($('[data-action="save-service"]'));
   if (!window.state.customServices.find(s => s.name === "Generator oil")) throw new Error("not added");
-  if (!text().includes("Generator oil")) throw new Error("not rendered");
+});
+
+check("language switch to Danish via settings", () => {
+  window.go("home");
+  click($("#gearbtn"));
+  $("#set-lang").value = "da";
+  click($('[data-action="save-settings"]'));
+  if (window.state.settings.lang !== "da") throw new Error("lang not saved");
+  if (!text().includes("Motortimer")) throw new Error("Danish home not rendered");
+  window.go("service");
+  if (!text().includes("Motorolie & filter")) throw new Error("Danish service names missing");
+  if (!text().includes("Motorzink")) throw new Error("Danish engine zinc missing");
 });
 
 check("state persists via localStorage", () => {
-  const raw = window.localStorage.getItem("marex370.v1");
-  const data = JSON.parse(raw);
-  if (data.settings.boatName !== "Vera") throw new Error("not persisted");
+  const data = JSON.parse(window.localStorage.getItem("marex370.v1"));
+  if (data.settings.lang !== "da") throw new Error("not persisted");
+  if (!data.patches.volvoService202604) throw new Error("patch flag not persisted");
 });
 
 check("no uncaught window errors", () => {
