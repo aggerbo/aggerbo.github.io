@@ -6,10 +6,10 @@
 
 CONTENT.en = {
   groups: [
-    { id: "engine",    name: "Engine",             icon: "⚙️" },
-    { id: "underwater",name: "Underwater & drive", icon: "🌊" },
-    { id: "systems",   name: "Boat systems",       icon: "🔌" },
-    { id: "safety",    name: "Safety gear",        icon: "🦺" },
+    { id: "engine",    name: "Engine",             icon: "cog" },
+    { id: "underwater",name: "Underwater & drive", icon: "waves" },
+    { id: "systems",   name: "Boat systems",       icon: "zap" },
+    { id: "safety",    name: "Safety gear",        icon: "life-buoy" },
   ],
 
   services: [
@@ -114,7 +114,7 @@ CONTENT.en = {
 
   checklists: [
     {
-      id: "buy", name: "Before you buy / handover", icon: "🔑",
+      id: "buy", name: "Before you buy / handover", icon: "key",
       desc: "The big one — walk the whole boat before money changes hands. Take your time, take photos of every fault, and write down anything that needs negotiating. Bring a torch, an old towel, work gloves and a power bank. Honestly: for a boat this size, also pay a marine surveyor — this list makes you a sharp second pair of eyes, not a replacement for one.",
       sections: [
         { name: "Paperwork first — before you pay a krone", items: [
@@ -196,7 +196,7 @@ CONTENT.en = {
       ],
     },
     {
-      id: "launch", name: "Spring — onto the water", icon: "🌱",
+      id: "launch", name: "Spring — onto the water", icon: "sprout",
       desc: "Launch & commissioning. Work top-down: everything on land first, then the in-water checks the moment she floats.",
       sections: [
         { name: "On land, before launch", items: [
@@ -229,7 +229,7 @@ CONTENT.en = {
       ],
     },
     {
-      id: "haulout", name: "Autumn — up from the water", icon: "❄️",
+      id: "haulout", name: "Autumn — up from the water", icon: "snowflake",
       desc: "Haul-out & winterization. The golden rule: no water anywhere it can freeze, no half-empty diesel tank, no flat batteries.",
       sections: [
         { name: "In the water, before haul-out", items: [
@@ -260,7 +260,7 @@ CONTENT.en = {
       ],
     },
     {
-      id: "pretrip", name: "Before every trip", icon: "🧭",
+      id: "pretrip", name: "Before every trip", icon: "compass",
       desc: "The 5-minute check before you cast off. Resets itself automatically so it's ready every time.",
       autoReset: true,
       sections: [
@@ -286,7 +286,7 @@ CONTENT.en = {
       ],
     },
     {
-      id: "posttrip", name: "After every trip", icon: "🏁",
+      id: "posttrip", name: "After every trip", icon: "flag",
       desc: "Leave the boat so the next trip starts easy. Resets automatically.",
       autoReset: true,
       sections: [
@@ -303,7 +303,7 @@ CONTENT.en = {
       ],
     },
     {
-      id: "monthly", name: "Monthly in season", icon: "📅",
+      id: "monthly", name: "Monthly in season", icon: "calendar-days",
       desc: "A 30-minute round once a month keeps surprises away. Resets automatically when you complete it.",
       autoReset: true,
       sections: [
@@ -324,72 +324,72 @@ CONTENT.en = {
   ],
 
   guide: [
-    { id: "impeller", name: "Raw water impeller", icon: "🌀",
+    { id: "impeller", name: "Raw water impeller", icon: "fan",
       what: "A star-shaped rubber wheel inside a bronze pump on the front/side of the engine. It sucks seawater in through the hull and pushes it through the heat exchanger to cool the engine.",
       where: "On the Volvo Penta D-series it sits behind a round cover plate with 4–6 screws on the raw water pump, low at the front of the engine. Follow the hose from the sea strainer — it ends at the pump.",
       look: "Rubber blades should be supple and unbroken. Cracked, stiff or missing blades = replace now (and find the missing bits in the heat exchanger before they block it).",
       when: "Replace every 12 months. Always keep a spare impeller kit aboard." },
-    { id: "strainer", name: "Sea strainer", icon: "🧺",
+    { id: "strainer", name: "Sea strainer", icon: "filter",
       what: "A filter with a clear bowl that catches weed, plastic and jellyfish before they reach the engine's cooling water pump.",
       where: "Between the engine's raw water seacock and the engine, in the engine bay — usually mounted on a bulkhead near the engine, with a transparent lid or bowl.",
       look: "You should be able to see through it. Weed, mud or a collapsed basket means cleaning time. Close the seacock before opening it!",
       when: "Glance before every trip, clean monthly in season." },
-    { id: "anodes", name: "Sacrificial anodes", icon: "🧲",
+    { id: "anodes", name: "Sacrificial anodes", icon: "magnet",
       what: "Blocks of zinc (salt water) or aluminium that corrode away on purpose, protecting your propeller, shaft, rudder and trim tabs from galvanic corrosion.",
       where: "On the shaft (a collar), on the rudder, on each trim tab, and a small ring or disc on the bow thruster leg. There may also be a pear-shaped hull anode.",
       look: "A healthy anode is rough and matte from corroding. Shiny untouched anodes might not have good contact. More than ~50% eaten = replace.",
       when: "Check at every haul-out, replace yearly or at 50% gone. Never paint them." },
-    { id: "antifoul", name: "Antifouling", icon: "🎨",
+    { id: "antifoul", name: "Antifouling", icon: "paintbrush",
       what: "Biocide paint on the hull bottom that stops barnacles and weed from growing. A fouled hull steals speed and burns extra diesel.",
       where: "Everything below the waterline. The prop and shaft can get their own special prop coating.",
       look: "At haul-out: if the bottom was slimy/green but rinses clean, the paint is working. Barnacles stuck on = time for a fresh coat (or a better paint).",
       when: "Repaint each spring before launch. Check local rules — some Baltic harbours restrict paint types." },
-    { id: "seacocks", name: "Seacocks & through-hulls", icon: "🔩",
+    { id: "seacocks", name: "Seacocks & through-hulls", icon: "toggle-right",
       what: "Ball valves on every hole in the hull: engine cooling intake, toilet in/out, galley drain, etc. Your boat's emergency shut-offs.",
       where: "Follow any hose downward and it ends at a seacock near the hull. Typical spots: engine bay (engine intake), under the toilet sink (toilet), under the galley sink.",
       look: "The handle should move a quarter-turn with firm hand force. Stiff = grease it. Stuck = have it serviced — a seacock you can't close is dangerous. Check for green corrosion on bronze.",
       when: "Exercise all of them a few times each season; grease at haul-out. Know where every single one is — count them." },
-    { id: "shaftseal", name: "Shaft seal (stern gland)", icon: "💧",
+    { id: "shaftseal", name: "Shaft seal (stern gland)", icon: "droplet",
       what: "The seal where the spinning propeller shaft exits the hull. On most Volvo shaft installations it's a black rubber lip seal that runs dry.",
       where: "In the bilge at the very back of the engine/gearbox — follow the shaft aft from the gearbox until it disappears through the hull.",
       look: "It should be dry. Dripping while running or at rest = it needs attention. After every launch, squeeze ('burp') the rubber boot until water squirts out, so it's water-lubricated, not air-locked.",
       when: "Burp at every launch. Replace roughly every 5 years / 500 h (workshop job, requires pulling the coupling)." },
-    { id: "oilcheck", name: "Dipstick & coolant tank", icon: "🛢️",
+    { id: "oilcheck", name: "Dipstick & coolant tank", icon: "gauge",
       what: "Your two before-every-trip engine checks: lube oil level and closed-circuit coolant level.",
       where: "The dipstick is a bright (often yellow) loop handle on the side of the engine. The coolant expansion tank is a translucent tank with MIN/MAX marks, on or near the engine, with a pressure cap.",
       look: "Oil: between the two marks, and not milky (milky = water in oil, call a mechanic). Coolant: between MIN and MAX checked cold — never open the cap on a hot engine.",
       when: "Before every trip. Takes 60 seconds with the hatch open." },
-    { id: "fuelsep", name: "Fuel filter / water separator", icon: "⛽",
+    { id: "fuelsep", name: "Fuel filter / water separator", icon: "fuel",
       what: "A filter with a (often clear) bowl at the bottom that catches water and dirt in the diesel before it reaches the engine. Water in diesel is enemy #1.",
       where: "Mounted on a bulkhead in the engine bay, between tank and engine — look for a cartridge with a bowl and a small drain screw underneath.",
       look: "Water sits as a clearly visible layer at the bottom of the bowl (diesel floats on water). Any water = open the drain screw and let it out until clean diesel comes.",
       when: "Glance monthly; change the element yearly / 400 h. Keep the tank full over winter so it can't condensate." },
-    { id: "belts", name: "Drive belt", icon: "➰",
+    { id: "belts", name: "Drive belt", icon: "rotate-cw",
       what: "The belt at the front of the engine that drives the alternator (charging!) and the circulation pump. Belt gone = no charging and an overheating engine.",
       where: "Front of the engine behind/under a guard. You'll see it wrap around several pulleys.",
       look: "Cracks across the ribs, glazed shiny sides, or black rubber dust on the engine below it = wearing out. Push midway between pulleys: ~1 cm of give.",
       when: "Check yearly and at any squealing sound. Carry a spare." },
-    { id: "batteries", name: "Batteries & battery switches", icon: "🔋",
+    { id: "batteries", name: "Batteries & battery switches", icon: "battery-charging",
       what: "Typically one start battery (engine only) and a house bank (fridge, lights, instruments), plus possibly a thruster battery, kept apart so the house loads can never strand you.",
       where: "In boxes under the aft cabin berth or under the saloon floor (varies). The red battery switches are usually near the steps or in the engine bay.",
       look: "Terminals tight, no green/white fuzz, batteries strapped down. Rested voltage ~12.6 V+ = healthy; under 12.2 V = needs charging; chronically low = aging battery.",
       when: "Terminals yearly, voltage glance every trip, full charge before winter." },
-    { id: "bilge", name: "Bilge & bilge pump", icon: "🕳️",
+    { id: "bilge", name: "Bilge & bilge pump", icon: "droplets",
       what: "The lowest point inside the hull where any water collects, with an electric pump and a float switch that should fire automatically.",
       where: "Under the floorboards — usually a hatch in the saloon sole and in the engine bay. The float switch sits next to the pump.",
       look: "The bilge should be dry (a known boat is a dry boat — new water always has a story). Lift the float switch by hand: the pump must run.",
       when: "Glance every trip; test the float monthly. Find where the bilge water exits the hull so you recognise it pumping." },
-    { id: "trimtabs", name: "Trim tabs", icon: "📐",
+    { id: "trimtabs", name: "Trim tabs", icon: "ruler",
       what: "Two steel plates on the transom edge that press the stern up/bow down, used to get on the plane faster and to level the ride.",
       where: "Bottom edge of the transom, port and starboard, each with a hydraulic or electric ram.",
       look: "They should travel smoothly full range. Check the small anode on each tab and that hinge pins aren't loose.",
       when: "Function test at launch, anodes at haul-out." },
-    { id: "thruster", name: "Bow thruster", icon: "↔️",
+    { id: "thruster", name: "Bow thruster", icon: "move-horizontal",
       what: "A propeller in a tunnel through the bow that pushes the bow sideways for docking — the Marex 370's best friend in a crosswind.",
       where: "The tunnel is visible at the bow below the waterline (haul-out) — inside, the motor sits under the forward berth/locker.",
       look: "At haul-out: prop free of weed and fishing line, small anode on the leg not eaten up. Inside: connections tight, no water in the compartment. Don't run it more than short bursts — it's not rated for continuous use.",
       when: "Anode and prop at every haul-out; quick function test at launch." },
-    { id: "heater", name: "Diesel heater", icon: "🔥",
+    { id: "heater", name: "Diesel heater", icon: "flame",
       what: "A Webasto/Eberspächer-type furnace that burns diesel from the main tank and blows warm air (or heats water) through the boat. Extends your season by months.",
       where: "Usually in a cockpit locker or the engine bay; you'll hear the fuel pump tick when it runs. The exhaust is a small skin fitting in the hull side.",
       look: "White smoke or burnt smell at start is normal for a few seconds; constant smoke, failure to start, or shutdowns = it's coking up and needs service.",
@@ -403,18 +403,18 @@ STRINGS.en = {
   title_service: "Service", title_lists: "Checklists", title_todos: "Todos", title_guide: "Know your boat", title_log: "Logbook",
 
   // home
-  status: "Status", in_water: "🌊 In the water", on_land: "🛠️ On land",
+  status: "Status", in_water: "In the water", on_land: "On land",
   btn_haulout: "Haul out", btn_launch: "Launch",
   engine_hours: "Engine hours", not_set: "— not set —", updated_on: "updated {date}", btn_update: "Update",
   needs_attention: "Needs attention", service_link: "Service ›",
-  nothing_due: "Nothing due.", all_good: "She's all shipshape ✨",
+  nothing_due: "Nothing due.", all_good: "She's all shipshape",
   unlogged_hint: "{n} items have no history yet — log them in Service.",
   quick_lists: "Quick checklists",
-  chip_pretrip: "🧭 Before trip", chip_posttrip: "🏁 After trip", chip_monthly: "📅 Monthly",
+  chip_pretrip: "Before trip", chip_posttrip: "After trip", chip_monthly: "Monthly",
   logbook: "Logbook", all_link: "All ›",
-  add_note_btn: "＋ Note / photo", add_trip_btn: "＋ Log trip", add_fuel_btn: "＋ Fuel fill-up",
-  start_here: "<strong>Start here 👋</strong> Set your current engine hours (read them off the dash display), then go through the Service tab and log roughly when each item was last done — a guess is fine. From then on the app tells you what's due.",
-  install_hint: "<strong>📲 Make it an app:</strong> tap the Share button below, then <strong>Add to Home Screen</strong>. You get a real app icon, full screen, and it works offline at sea.",
+  add_note_btn: "Note / photo", add_trip_btn: "Log trip", add_fuel_btn: "Fuel fill-up",
+  start_here: "<strong>Start here </strong> Set your current engine hours (read them off the dash display), then go through the Service tab and log roughly when each item was last done — a guess is fine. From then on the app tells you what's due.",
+  install_hint: "<strong> Make it an app:</strong> tap the Share button below, then <strong>Add to Home Screen</strong>. You get a real app icon, full screen, and it works offline at sea.",
   got_it: "Got it",
 
   // status
@@ -426,37 +426,37 @@ STRINGS.en = {
   // service
   workshop: "workshop", last_lbl: "last",
   svc_footnote: "Intervals follow the Volvo Penta D-series schedule (whichever comes first: hours or calendar time). Adjust to your engine's manual if it differs.",
-  add_service_btn: "＋ Add your own service item",
+  add_service_btn: "Add your own service item",
   baseline_notice: "Set your engine hours on the Home tab first — hour-based intervals can't be tracked without it.",
-  expiry_card: "⏳ Expiry dates",
+  expiry_card: "Expiry dates",
   expiry_hint: "Things with a printed expiry date: flares, fire extinguishers, lifejacket gas cartridges, first aid items, EPIRB battery. Add them here and they pop up on Home in good time.",
-  add_expiry_btn: "＋ Add expiry date",
+  add_expiry_btn: "Add expiry date",
   expires_on: "expires {date}", expired_ago: "expired {n} days ago",
 
   // checklists
   of_lbl: "{a} of {b}", checked_lbl: "{a}/{b} checked", last_completed: "last completed {date}",
-  log_completed_btn: "✓ Log as completed", check_all_btn: "Check all {n} items to complete",
+  log_completed_btn: "Log as completed", check_all_btn: "Check all {n} items to complete",
   reset_boxes: "Reset checkboxes", reset_confirm: "Uncheck everything?",
-  completed_alert: "Logged! ✓ The checklist has been reset for next time.",
+  completed_alert: "Logged! The checklist has been reset for next time.",
   items_lbl: "{n} items", list_completed_log: "{name} completed",
 
   // todos
   todo_ph: "New todo… e.g. Buy spare impeller", add_btn: "Add",
   todo_head: "To do ({n})", done_head: "Done",
   todos_empty: "Nothing on the list. Add things the moment you spot them aboard — with a photo.",
-  mark_done_btn: "✓ Mark as done", mark_undone_btn: "Mark as not done",
+  mark_done_btn: "Mark as done", mark_undone_btn: "Mark as not done",
   delete_btn: "Delete", delete_todo_confirm: "Delete this todo?",
   todo_note_ph: "Details, measurements, part numbers…", added_lbl: "Added", done_lbl: "done",
 
   // guide
   guide_intro: "<strong>What am I looking at?</strong> Plain-language explanations of the parts you'll meet on your Marex 370. Open each one and snap a photo of <em>your</em> boat's version — next season you'll thank yourself.",
-  yours: "📷 Yours",
+  yours: "Yours",
   yours_tip: "Take a photo of this part on your boat so you always know what it looks like (and how it looked when healthy).",
   what_is: "What it is", where_find: "Where to find it", what_look: "What to look for", how_often: "How often",
 
   // logbook
   log_empty: "No entries yet.",
-  fuel_card: "⛽ Fuel this year", fuel_total: "{l} L", fuel_cost: " · {p} kr",
+  fuel_card: "Fuel this year", fuel_total: "{l} L", fuel_cost: " · {p} kr",
   fuel_rate: "≈ {r} L/h average (from fills with hours)",
 
   // sheets / forms
@@ -498,7 +498,7 @@ STRINGS.en = {
   settings: "Settings", boat_name_lbl: "Boat name", engine_lbl: "Engine", language_lbl: "Language / Sprog",
   backup_head: "Backup",
   backup_tip: "Data lives only on this phone. Export a backup now and then (photos are not included in the file — they stay on the device).",
-  export_btn: "⬇️ Export backup", import_btn: "⬆️ Import backup",
+  export_btn: "Export backup", import_btn: "Import backup",
   danger_head: "Danger zone", erase_btn: "Erase all data",
   erase_c1: "Erase ALL data? This cannot be undone.",
   erase_c2: "Really sure? Service history, todos and photos will be gone.",
@@ -507,7 +507,7 @@ STRINGS.en = {
   storage_full: "Could not save data (storage full?). Export a backup from Settings.",
 
   // season
-  season_water_log: "Launched — in the water 🌊", season_land_log: "Hauled out — on land 🛠️",
+  season_water_log: "Launched — in the water", season_land_log: "Hauled out — on land",
   launch_prompt: "She's in the water! Open the spring launch checklist?",
   haulout_prompt: "Hauled out. Open the haul-out & winterization checklist?",
 

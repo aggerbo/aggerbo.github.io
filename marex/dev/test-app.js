@@ -24,10 +24,10 @@ window.addEventListener("error", e => { errs.push(e.message); });
 window.structuredClone = obj => JSON.parse(JSON.stringify(obj));
 
 // classic scripts share top-level const/let bindings; emulate by evaluating as one unit
-const bundle = ["js/i18n.js", "js/content-en.js", "js/content-da.js", "js/db.js", "js/illustrations.js", "js/app.js"]
+const bundle = ["js/i18n.js", "js/icons.js", "js/content-en.js", "js/content-da.js", "js/db.js", "js/illustrations.js", "js/app.js"]
   .map(f => fs.readFileSync(path.join(ROOT, f), "utf8")).join("\n;\n") +
   `;window.GUIDE=()=>GUIDE;window.CHECKLISTS=()=>CHECKLISTS;window.SERVICES=()=>SERVICES;
-   window.CONTENT=CONTENT;window.STRINGS=STRINGS;
+   window.CONTENT=CONTENT;window.STRINGS=STRINGS;window.LUCIDE=LUCIDE;window.icon=icon;
    Object.defineProperty(window,'state',{get:()=>state,set:v=>{state=v}});`;
 try { window.eval(bundle); console.log("bundle loaded"); }
 catch (e) { console.error("FAIL loading bundle:", e.message, e.stack?.split("\n")[1] || ""); failures++; }
@@ -275,6 +275,28 @@ check("pull gesture grows the refresh indicator at scroll top", () => {
   const h = parseFloat($("#ptr").style.height) || 0;
   if (h <= 0) throw new Error("ptr did not grow on pull");
   fire("touchend", 200, 250);
+});
+
+check("all content icon names resolve to a Lucide icon", () => {
+  for (const lang of ["en", "da"]) {
+    const c = window.CONTENT[lang];
+    const names = [...c.groups, ...c.checklists, ...c.guide].map(o => o.icon);
+    for (const n of names) if (!window.LUCIDE[n]) throw new Error(`missing icon "${n}" (${lang})`);
+  }
+});
+
+check("no missing-icon warnings while rendering every screen", () => {
+  const warnings = [];
+  const orig = console.warn;
+  console.warn = (...a) => { warnings.push(a.join(" ")); };
+  try {
+    ["home", "service", "lists", "todos", "guide"].forEach(t => window.go(t));
+    window.go("lists", "checklist", "buy");
+    window.go("guide", "guide-item", "impeller");
+    window.go("home", "log");
+  } finally { console.warn = orig; }
+  const missing = warnings.filter(w => w.includes("missing icon"));
+  if (missing.length) throw new Error(missing.join("; "));
 });
 
 check("no uncaught window errors", () => {

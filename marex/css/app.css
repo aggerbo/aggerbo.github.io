@@ -85,9 +85,9 @@ body {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   font-family: inherit; font-weight: 500;
 }
-#tabbar button .ticon { font-size: 21px; filter: grayscale(1) opacity(.55); }
+#tabbar button .ticon { display: inline-flex; color: var(--muted-fg); }
 #tabbar button.active { color: var(--foreground); font-weight: 600; }
-#tabbar button.active .ticon { filter: none; }
+#tabbar button.active .ticon { color: var(--foreground); }
 
 /* cards & rows */
 .card {
@@ -118,7 +118,7 @@ body {
 .row-main { flex: 1; min-width: 0; }
 .row-title { font-weight: 500; font-size: 14.5px; }
 .row-sub { font-size: 12.5px; color: var(--muted-fg); margin-top: 1px; }
-.chev { color: #d4d4d8; font-size: 20px; flex: none; }
+.chev { color: #c4c4c8; flex: none; display: inline-flex; align-items: center; }
 
 /* badges */
 .pill {
@@ -188,6 +188,7 @@ body {
 /* buttons — shadcn variants */
 .btn {
   font: inherit; font-weight: 500; font-size: 14px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   border: 1px solid var(--border); background: var(--card); color: var(--foreground);
   border-radius: var(--radius-sm); padding: 10px 16px; cursor: pointer;
   box-shadow: var(--shadow-sm);
@@ -201,20 +202,46 @@ body {
 .btn.ghost:active { background: var(--muted); }
 .btn.danger { color: var(--destructive); border-color: #fecaca; }
 .btn.danger.ghost { border-color: transparent; }
-.btn.small { padding: 6px 12px; font-size: 13px; }
-.btn.wide { display: block; width: 100%; margin-top: 10px; }
+.btn.small { padding: 6px 12px; font-size: 13px; gap: 5px; }
+.btn.wide { display: flex; width: 100%; margin-top: 10px; }
 .btn.disabled { opacity: .5; pointer-events: none; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .btn-row .btn { flex: 1; min-width: 110px; }
 
 .chip {
   font: inherit; font-size: 13.5px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px;
   background: var(--muted); color: var(--foreground);
   border: 1px solid var(--border);
   border-radius: 999px; padding: 8px 14px; cursor: pointer;
 }
 .chip:active { background: var(--border); }
+.chip .ic { color: var(--muted-fg); }
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* icons */
+.ic { flex: none; display: inline-block; vertical-align: middle; }
+.inline-ic { vertical-align: -2px; color: var(--muted-fg); margin-right: 1px; }
+.card-head h2 { display: inline-flex; align-items: center; gap: 7px; }
+.head-ic { color: var(--muted-fg); }
+.head-ic.warn { color: #b45309; }
+.row-ic {
+  flex: none; width: 34px; height: 34px; border-radius: 9px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--muted); color: var(--muted-fg); border: 1px solid var(--border);
+}
+.row-ic.ok      { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
+.row-ic.soon    { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
+.row-ic.overdue { background: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
+
+/* shadcn-style alert (replaces the old plain notice) */
+.alert {
+  display: flex; gap: 11px; align-items: flex-start;
+  background: var(--muted); border: 1px solid var(--border); box-shadow: none;
+}
+.alert-ic { flex: none; color: var(--foreground); margin-top: 1px; }
+.alert-body { flex: 1; font-size: 14px; }
+.alert-body > div { margin-top: 8px; }
 
 /* checklists */
 .progress {
@@ -234,7 +261,11 @@ body {
 .check-row.done .check-text { color: var(--muted-fg); text-decoration: line-through; }
 
 .list-card { display: flex; gap: 12px; align-items: center; }
-.list-icon { font-size: 26px; flex: none; }
+.list-icon {
+  flex: none; width: 40px; height: 40px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--muted); color: var(--foreground); border: 1px solid var(--border);
+}
 
 /* todos */
 .add-row { display: flex; gap: 8px; }
@@ -253,7 +284,7 @@ body {
   background: var(--muted); cursor: pointer; border: 1px solid var(--border);
 }
 .thumb.add {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
   font: inherit; font-size: 12px; color: var(--muted-fg); font-weight: 500;
   background: var(--muted); border: 1.5px dashed #d4d4d8;
 }
