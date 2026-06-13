@@ -241,6 +241,42 @@ check("state persists via localStorage", () => {
   if (!data.patches.volvoService202604) throw new Error("patch flag not persisted");
 });
 
+check("pull-to-refresh indicator mounted before #view", () => {
+  const ptr = $("#ptr");
+  if (!ptr) throw new Error("#ptr not created");
+  if (ptr.nextElementSibling?.id !== "view") throw new Error("#ptr not directly before #view");
+  if (!$("#ptr .ptr-spin")) throw new Error("spinner missing");
+});
+
+check("edge-swipe from left engages back gesture on a sub-page", () => {
+  window.go("guide", "guide-item", "impeller");
+  const view = $("#view");
+  Object.defineProperty(view, "clientWidth", { value: 390, configurable: true });
+  Object.defineProperty(view, "scrollTop", { value: 0, configurable: true });
+  const fire = (type, x, y) => view.dispatchEvent(Object.assign(
+    new window.Event(type, { bubbles: true, cancelable: true }),
+    type === "touchend" ? { changedTouches: [{ clientX: x, clientY: y }] } : { touches: [{ clientX: x, clientY: y }] }));
+  fire("touchstart", 8, 300);
+  fire("touchmove", 120, 305);   // horizontal drag from the left edge
+  if (!/translateX/.test(view.style.transform)) throw new Error("swipe-back did not engage (no transform)");
+  fire("touchend", 60, 305);     // release short of threshold → snaps back
+});
+
+check("pull gesture grows the refresh indicator at scroll top", () => {
+  window.go("home");
+  const view = $("#view");
+  Object.defineProperty(view, "clientWidth", { value: 390, configurable: true });
+  Object.defineProperty(view, "scrollTop", { value: 0, configurable: true });
+  const fire = (type, x, y) => view.dispatchEvent(Object.assign(
+    new window.Event(type, { bubbles: true, cancelable: true }),
+    type === "touchend" ? { changedTouches: [{ clientX: x, clientY: y }] } : { touches: [{ clientX: x, clientY: y }] }));
+  fire("touchstart", 200, 100);
+  fire("touchmove", 200, 250);   // pull straight down 150px
+  const h = parseFloat($("#ptr").style.height) || 0;
+  if (h <= 0) throw new Error("ptr did not grow on pull");
+  fire("touchend", 200, 250);
+});
+
 check("no uncaught window errors", () => {
   if (errs.length) throw new Error(errs.join("; "));
 });

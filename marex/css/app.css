@@ -29,7 +29,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-#app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+#app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
 
 #topbar {
   background: rgba(255, 255, 255, .92);
@@ -38,7 +38,7 @@ body {
   border-bottom: 1px solid var(--border);
   padding: calc(var(--safe-top) + 10px) 14px 10px;
   display: flex; align-items: center; gap: 8px;
-  position: sticky; top: 0; z-index: 10;
+  position: relative; z-index: 10; flex: none;
 }
 #topbar h1 {
   font-size: 16px; margin: 0; flex: 1; text-align: center;
@@ -51,11 +51,33 @@ body {
 }
 .iconbtn:active { background: var(--muted); }
 
-#view { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 14px 24px; }
+/* pull-to-refresh indicator sits between header and the scroll area */
+#ptr {
+  flex: none; height: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--background);
+}
+.ptr-spin {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2.5px solid var(--border); border-top-color: var(--muted-fg);
+  opacity: 0; transition: opacity .15s; transform: rotate(0deg);
+}
+#ptr.ready .ptr-spin { opacity: 1; }
+#ptr.spinning .ptr-spin { opacity: 1; animation: ptr-rot .7s linear infinite; }
+@keyframes ptr-rot { to { transform: rotate(360deg); } }
+
+#view {
+  flex: 1; min-height: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 14px 14px 24px;
+  will-change: transform;
+}
 
 #tabbar {
   display: flex; background: var(--card); border-top: 1px solid var(--border);
   padding-bottom: var(--safe-bottom);
+  flex: none; z-index: 10;
 }
 #tabbar button {
   flex: 1; background: none; border: 0; padding: 8px 0 6px;
