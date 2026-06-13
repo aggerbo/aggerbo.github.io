@@ -225,7 +225,7 @@ function homeView() {
 
   <section class="card">
     <div class="card-head"><h2>${icon("book-open", { size: 16, cls: "head-ic" })}${STR.logbook}</h2><a data-action="open-log">${STR.all_link}</a></div>
-    ${recent.length === 0 ? `<div class="empty">${STR.log_empty}</div>` : recent.map(logRow).join("")}
+    ${recent.length === 0 ? emptyState("book-open", STR.log_empty) : recent.map(logRow).join("")}
     <div class="btn-row">
       <button class="btn outline" data-action="add-trip">${icon("compass", { size: 16 })}${STR.add_trip_btn}</button>
       <button class="btn outline" data-action="add-note">${icon("pencil", { size: 16 })}${STR.add_note_btn}</button>
@@ -235,6 +235,11 @@ function homeView() {
 
 /* log entry type -> lucide icon */
 const LOG_ICON = { service: "wrench", checklist: "clipboard-check", hours: "timer", note: "pencil", season: "anchor", todo: "circle-check", fuel: "fuel", trip: "compass" };
+
+/* shadcn-style empty state: centered icon tile + message */
+function emptyState(iconName, text) {
+  return `<div class="empty-state"><span class="empty-ic">${icon(iconName, { size: 22 })}</span><span>${text}</span></div>`;
+}
 
 function logRow(e) {
   return `
@@ -374,7 +379,7 @@ function todosView() {
   </section>
   <section class="card">
     <div class="card-head"><h2>${icon("list-todo", { size: 16, cls: "head-ic" })}${T("todo_head", { n: open.length })}</h2></div>
-    ${open.length === 0 ? `<div class="empty">${STR.todos_empty}</div>` : open.map(todoRow).join("")}
+    ${open.length === 0 ? emptyState("list-todo", STR.todos_empty) : open.map(todoRow).join("")}
   </section>
   ${closed.length ? `
   <section class="card">
@@ -464,7 +469,7 @@ function logView() {
   </div>
   ${fuelSummary()}
   <section class="card">
-    ${state.log.length === 0 ? `<div class="empty">${STR.log_empty}</div>` : state.log.map(logRow).join("")}
+    ${state.log.length === 0 ? emptyState("book-open", STR.log_empty) : state.log.map(logRow).join("")}
   </section>`;
 }
 
