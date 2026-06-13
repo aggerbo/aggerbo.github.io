@@ -5,10 +5,10 @@
 
 CONTENT.da = {
   groups: [
-    { id: "engine",    name: "Motor",            icon: "⚙️" },
-    { id: "underwater",name: "Under vandlinjen", icon: "🌊" },
-    { id: "systems",   name: "Bådens systemer",  icon: "🔌" },
-    { id: "safety",    name: "Sikkerhedsudstyr", icon: "🦺" },
+    { id: "engine",    name: "Motor",            icon: "cog" },
+    { id: "underwater",name: "Under vandlinjen", icon: "waves" },
+    { id: "systems",   name: "Bådens systemer",  icon: "zap" },
+    { id: "safety",    name: "Sikkerhedsudstyr", icon: "life-buoy" },
   ],
 
   services: [
@@ -113,7 +113,7 @@ CONTENT.da = {
 
   checklists: [
     {
-      id: "buy", name: "Før du køber / overtagelse", icon: "🔑",
+      id: "buy", name: "Før du køber / overtagelse", icon: "key",
       desc: "Den store. Gå hele båden igennem, før pengene skifter hænder. Tag dig god tid, fotografér hver eneste fejl, og skriv alt ned, der skal forhandles om. Tag en lygte, et gammelt håndklæde, arbejdshandsker og en powerbank med. Helt ærligt: til en båd af denne størrelse bør du også betale en bådsagkyndig (surveyor) — denne liste gør dig til et skarpt ekstra par øjne, ikke en erstatning for en fagmand.",
       sections: [
         { name: "Papirerne først — før du betaler en krone", items: [
@@ -195,7 +195,7 @@ CONTENT.da = {
       ],
     },
     {
-      id: "launch", name: "Forår — i vandet", icon: "🌱",
+      id: "launch", name: "Forår — i vandet", icon: "sprout",
       desc: "Søsætning & klargøring. Arbejd oppefra og ned: alt på land først, derefter tjek i vandet i samme øjeblik hun flyder.",
       sections: [
         { name: "På land, før søsætning", items: [
@@ -228,7 +228,7 @@ CONTENT.da = {
       ],
     },
     {
-      id: "haulout", name: "Efterår — op af vandet", icon: "❄️",
+      id: "haulout", name: "Efterår — op af vandet", icon: "snowflake",
       desc: "Optagning & vinterklargøring. Den gyldne regel: intet vand dér hvor det kan fryse, ingen halvtom dieseltank, ingen flade batterier.",
       sections: [
         { name: "I vandet, før optagning", items: [
@@ -259,7 +259,7 @@ CONTENT.da = {
       ],
     },
     {
-      id: "pretrip", name: "Før hver tur", icon: "🧭",
+      id: "pretrip", name: "Før hver tur", icon: "compass",
       desc: "5-minutters tjekket før du kaster los. Nulstiller sig selv automatisk, så den altid er klar.",
       autoReset: true,
       sections: [
@@ -285,7 +285,7 @@ CONTENT.da = {
       ],
     },
     {
-      id: "posttrip", name: "Efter hver tur", icon: "🏁",
+      id: "posttrip", name: "Efter hver tur", icon: "flag",
       desc: "Forlad båden, så næste tur starter let. Nulstiller automatisk.",
       autoReset: true,
       sections: [
@@ -302,7 +302,7 @@ CONTENT.da = {
       ],
     },
     {
-      id: "monthly", name: "Månedligt i sæsonen", icon: "📅",
+      id: "monthly", name: "Månedligt i sæsonen", icon: "calendar-days",
       desc: "En 30-minutters runde en gang om måneden holder overraskelserne væk. Nulstiller automatisk når du gennemfører den.",
       autoReset: true,
       sections: [
@@ -323,72 +323,72 @@ CONTENT.da = {
   ],
 
   guide: [
-    { id: "impeller", name: "Impeller (søvandspumpe)", icon: "🌀",
+    { id: "impeller", name: "Impeller (søvandspumpe)", icon: "fan",
       what: "Et stjerneformet gummihjul inde i en bronzepumpe foran/på siden af motoren. Den suger søvand ind gennem skroget og presser det gennem varmeveksleren for at køle motoren.",
       where: "På Volvo Penta D-serien sidder den bag et rundt dæksel med 4–6 skruer på søvandspumpen, lavt foran på motoren. Følg slangen fra søvandsfilteret — den ender ved pumpen.",
       look: "Gummivingerne skal være bløde og hele. Revnede, stive eller manglende vinger = skift nu (og find de manglende stykker i varmeveksleren, før de blokerer den).",
       when: "Skift hver 12. måned. Hav altid et ekstra impellersæt om bord." },
-    { id: "strainer", name: "Søvandsfilter", icon: "🧺",
+    { id: "strainer", name: "Søvandsfilter", icon: "filter",
       what: "Et filter med en klar skål, der fanger tang, plastik og brandmænd, før de når motorens kølevandspumpe.",
       where: "Mellem motorens søventil og motoren, i motorrummet — typisk monteret på et skot nær motoren, med gennemsigtigt låg eller skål.",
       look: "Du skal kunne se igennem det. Tang, mudder eller en sammenfalden kurv betyder rensetid. Luk søventilen, før du åbner det!",
       when: "Et blik før hver tur, rens månedligt i sæsonen." },
-    { id: "anodes", name: "Offeranoder", icon: "🧲",
+    { id: "anodes", name: "Offeranoder", icon: "magnet",
       what: "Klodser af zink (saltvand) eller aluminium, der med vilje tærer væk og beskytter propel, aksel, ror og trimflaps mod galvanisk tæring.",
       where: "På akslen (en krave), på roret, på hver trimflap og en lille ring eller skive på bovpropellens drev. Der kan også sidde en pæreformet skroganode.",
       look: "En sund anode er ru og mat af at tære. Skinnende, urørte anoder har måske ikke god kontakt. Mere end ~50 % tæret = skift.",
       when: "Tjek ved hver optagning, skift årligt eller ved 50 % tæring. Mal dem aldrig." },
-    { id: "antifoul", name: "Bundmaling", icon: "🎨",
+    { id: "antifoul", name: "Bundmaling", icon: "paintbrush",
       what: "Biocidmaling på bunden, der forhindrer rurer og alger i at gro. En begroet bund stjæler fart og brænder ekstra diesel af.",
       where: "Alt under vandlinjen. Propel og aksel kan få deres egen særlige propelcoating.",
       look: "Ved optagning: hvis bunden var slimet/grøn men spules ren, virker malingen. Fastsiddende rurer = tid til nyt lag (eller en bedre maling).",
       when: "Mal hvert forår før søsætning. Tjek de lokale regler — nogle havne i Østersøen begrænser malingstyper." },
-    { id: "seacocks", name: "Søventiler & gennemføringer", icon: "🔩",
+    { id: "seacocks", name: "Søventiler & gennemføringer", icon: "toggle-right",
       what: "Kuglehaner på hvert hul i skroget: motorens køleindtag, toilet ind/ud, vaskeafløb osv. Bådens nødafbrydere.",
       where: "Følg en hvilken som helst slange nedad, og den ender ved en søventil nær skroget. Typiske steder: motorrum (motorindtag), under toiletvasken (toilet), under vasken i pantryet.",
       look: "Håndtaget skal kunne drejes en kvart omgang med fast håndkraft. Stramt = smør den. Sidder fast = få den serviceret — en søventil, du ikke kan lukke, er farlig. Se efter grøn ir på bronze.",
       when: "Motionér dem alle et par gange hver sæson; smør ved optagning. Kend hver eneste af dem — tæl dem." },
-    { id: "shaftseal", name: "Akseltætning (pakdåse)", icon: "💧",
+    { id: "shaftseal", name: "Akseltætning (pakdåse)", icon: "droplet",
       what: "Tætningen dér, hvor den roterende skrueaksel går ud gennem skroget. På de fleste Volvo-anlæg er det en sort gummitætning, der kører tørt.",
       where: "I bunden helt agter ved motoren/gearkassen — følg akslen agterud fra gearkassen, til den forsvinder gennem skroget.",
       look: "Den skal være tør. Drypper den under sejlads eller i ro = den skal efterses. Efter hver søsætning: klem ('bøvs') gummibælgen, til der sprøjter vand ud, så den er vandsmurt og ikke har luft i.",
       when: "Bøvs ved hver søsætning. Skift ca. hvert 5. år / 500 t (værkstedsjob — koblingen skal trækkes)." },
-    { id: "oilcheck", name: "Oliepind & kølervæsketank", icon: "🛢️",
+    { id: "oilcheck", name: "Oliepind & kølervæsketank", icon: "gauge",
       what: "Dine to før-hver-tur motortjek: oliestand og kølervæskeniveau i det lukkede kredsløb.",
       where: "Oliepinden er et lyst (ofte gult) løkkehåndtag på siden af motoren. Ekspansionstanken er en halvgennemsigtig beholder med MIN/MAX-mærker, på eller ved motoren, med trykdæksel.",
       look: "Olie: mellem de to mærker og ikke mælkehvid (mælkehvid = vand i olien, ring til en mekaniker). Kølervæske: mellem MIN og MAX målt kold — åbn aldrig dækslet på en varm motor.",
       when: "Før hver tur. Tager 60 sekunder med lugen åben." },
-    { id: "fuelsep", name: "Brændstoffilter / vandudskiller", icon: "⛽",
+    { id: "fuelsep", name: "Brændstoffilter / vandudskiller", icon: "fuel",
       what: "Et filter med en (ofte klar) skål i bunden, der fanger vand og snavs i dieselen, før den når motoren. Vand i dieselen er fjende nr. 1.",
       where: "Monteret på et skot i motorrummet, mellem tank og motor — kig efter en patron med en skål og en lille aftapningsskrue i bunden.",
       look: "Vand lægger sig som et tydeligt lag i bunden af skålen (diesel flyder oven på vand). Ethvert vandlag = åbn aftapningsskruen og luk det ud, til der kommer ren diesel.",
       when: "Et blik månedligt; skift elementet årligt / 400 t. Hold tanken fuld over vinteren, så den ikke kondenserer." },
-    { id: "belts", name: "Kilerem", icon: "➰",
+    { id: "belts", name: "Kilerem", icon: "rotate-cw",
       what: "Remmen forrest på motoren, der trækker generatoren (ladning!) og cirkulationspumpen. Knækket rem = ingen ladning og en motor, der koger over.",
       where: "Forrest på motoren bag/under en afskærmning. Du kan se den løbe rundt om flere remskiver.",
       look: "Revner på tværs af ribberne, blanke skinnende sider eller sort gummistøv på motoren nedenunder = ved at være slidt. Tryk midt mellem remskiverne: ~1 cm eftergivenhed.",
       when: "Tjek årligt og ved enhver hvinende lyd. Hav en i reserve." },
-    { id: "batteries", name: "Batterier & hovedafbrydere", icon: "🔋",
+    { id: "batteries", name: "Batterier & hovedafbrydere", icon: "battery-charging",
       what: "Typisk ét startbatteri (kun motor) og en forbrugsbank (køleskab, lys, instrumenter), plus evt. et bovpropelbatteri — holdt adskilt, så forbruget aldrig kan strande dig.",
       where: "I kasser under køjen i agterkahytten eller under dørken i salonen (varierer). De røde hovedafbrydere sidder typisk ved trappen eller i motorrummet.",
       look: "Poler spændt, ingen grøn/hvid ir, batterier spændt fast. Hvilespænding ~12,6 V+ = sundt; under 12,2 V = skal lades; kronisk lavt = batteriet ældes.",
       when: "Poler årligt, blik på spændingen hver tur, fuld opladning før vinteren." },
-    { id: "bilge", name: "Bunden & lænsepumpen", icon: "🕳️",
+    { id: "bilge", name: "Bunden & lænsepumpen", icon: "droplets",
       what: "Det laveste punkt inde i skroget, hvor alt vand samler sig, med en elektrisk pumpe og en svømmerafbryder, der skal starte automatisk.",
       where: "Under dørken — typisk en luge i salonens gulv og i motorrummet. Svømmerafbryderen sidder ved siden af pumpen.",
       look: "Bunden skal være tør (en kendt båd er en tør båd — nyt vand har altid en historie). Løft svømmerafbryderen med hånden: pumpen skal køre.",
       when: "Et blik hver tur; test svømmeren månedligt. Find ud af, hvor lænsevandet løber ud af skroget, så du kan genkende, når den pumper." },
-    { id: "trimtabs", name: "Trimflaps", icon: "📐",
+    { id: "trimtabs", name: "Trimflaps", icon: "ruler",
       what: "To stålplader på agterspejlets underkant, der presser agterenden op/stævnen ned — bruges til at komme hurtigere i plan og rette sejladsen op.",
       where: "Agterspejlets underkant, bagbord og styrbord, hver med en hydraulisk eller elektrisk cylinder.",
       look: "De skal køre jævnt i hele vandringen. Tjek den lille anode på hver flap, og at hængselsboltene ikke er løse.",
       when: "Funktionstest ved søsætning, anoder ved optagning." },
-    { id: "thruster", name: "Bovpropel", icon: "↔️",
+    { id: "thruster", name: "Bovpropel", icon: "move-horizontal",
       what: "En propel i en tunnel gennem stævnen, der skubber stævnen sidelæns ved havnemanøvrer — Marex 370'erens bedste ven i sidevind.",
       where: "Tunnelen ses i stævnen under vandlinjen (ved optagning) — indvendigt sidder motoren under køjen/skabet forude.",
       look: "Ved optagning: propel fri for tang og fiskeline, den lille anode på drevet ikke tæret op. Indvendigt: forbindelser spændt, intet vand i rummet. Kør den kun i korte stød — den er ikke bygget til konstant drift.",
       when: "Anode og propel ved hver optagning; hurtig funktionstest ved søsætning." },
-    { id: "heater", name: "Dieselvarmer", icon: "🔥",
+    { id: "heater", name: "Dieselvarmer", icon: "flame",
       what: "Et Webasto/Eberspächer-fyr, der brænder diesel fra hovedtanken og blæser varm luft (eller varmer vand) gennem båden. Forlænger din sæson med måneder.",
       where: "Typisk i et cockpitskab eller motorrummet; du kan høre brændstofpumpen tikke, når det kører. Udstødningen er en lille gennemføring i skrogsiden.",
       look: "Hvid røg eller brændt lugt ved start er normalt i få sekunder; konstant røg, startsvigt eller udkobling = det soder til og skal serviceres.",
@@ -402,18 +402,18 @@ STRINGS.da = {
   title_service: "Service", title_lists: "Tjeklister", title_todos: "Opgaver", title_guide: "Kend din båd", title_log: "Logbog",
 
   // hjem
-  status: "Status", in_water: "🌊 I vandet", on_land: "🛠️ På land",
+  status: "Status", in_water: "I vandet", on_land: "På land",
   btn_haulout: "Tag op", btn_launch: "Søsæt",
   engine_hours: "Motortimer", not_set: "— ikke sat —", updated_on: "opdateret {date}", btn_update: "Opdatér",
   needs_attention: "Kræver opmærksomhed", service_link: "Service ›",
-  nothing_due: "Intet forfalder.", all_good: "Hun er i topform ✨",
+  nothing_due: "Intet forfalder.", all_good: "Hun er i topform",
   unlogged_hint: "{n} punkter har ingen historik endnu — registrér dem under Service.",
   quick_lists: "Hurtige tjeklister",
-  chip_pretrip: "🧭 Før tur", chip_posttrip: "🏁 Efter tur", chip_monthly: "📅 Månedlig",
+  chip_pretrip: "Før tur", chip_posttrip: "Efter tur", chip_monthly: "Månedlig",
   logbook: "Logbog", all_link: "Alle ›",
-  add_note_btn: "＋ Notat / foto", add_trip_btn: "＋ Registrér tur", add_fuel_btn: "＋ Tankning",
-  start_here: "<strong>Start her 👋</strong> Indtast dine aktuelle motortimer (aflæs dem på displayet ved rattet), og gå derefter Service-fanen igennem og registrér cirka hvornår hvert punkt sidst blev lavet — et gæt er fint. Derefter fortæller appen dig, hvad der forfalder.",
-  install_hint: "<strong>📲 Gør den til en app:</strong> tryk på Del-knappen nedenfor og vælg <strong>Føj til hjemmeskærm</strong>. Så får du et rigtigt app-ikon, fuld skærm, og den virker offline på vandet.",
+  add_note_btn: "Notat / foto", add_trip_btn: "Registrér tur", add_fuel_btn: "Tankning",
+  start_here: "<strong>Start her </strong> Indtast dine aktuelle motortimer (aflæs dem på displayet ved rattet), og gå derefter Service-fanen igennem og registrér cirka hvornår hvert punkt sidst blev lavet — et gæt er fint. Derefter fortæller appen dig, hvad der forfalder.",
+  install_hint: "<strong> Gør den til en app:</strong> tryk på Del-knappen nedenfor og vælg <strong>Føj til hjemmeskærm</strong>. Så får du et rigtigt app-ikon, fuld skærm, og den virker offline på vandet.",
   got_it: "Forstået",
 
   // status
@@ -425,37 +425,37 @@ STRINGS.da = {
   // service
   workshop: "værksted", last_lbl: "sidst",
   svc_footnote: "Intervallerne følger Volvo Pentas serviceskema for D-serien (det der kommer først: timer eller kalendertid). Justér efter din motors instruktionsbog, hvis den afviger.",
-  add_service_btn: "＋ Tilføj dit eget servicepunkt",
+  add_service_btn: "Tilføj dit eget servicepunkt",
   baseline_notice: "Indtast først dine motortimer under Hjem — timebaserede intervaller kan ikke spores uden.",
-  expiry_card: "⏳ Udløbsdatoer",
+  expiry_card: "Udløbsdatoer",
   expiry_hint: "Ting med påtrykt udløbsdato: nødraketter, brandslukkere, gaspatroner til redningsveste, førstehjælp, EPIRB-batteri. Tilføj dem her, så dukker de op på Hjem i god tid.",
-  add_expiry_btn: "＋ Tilføj udløbsdato",
+  add_expiry_btn: "Tilføj udløbsdato",
   expires_on: "udløber {date}", expired_ago: "udløb for {n} dage siden",
 
   // tjeklister
   of_lbl: "{a} af {b}", checked_lbl: "{a}/{b} markeret", last_completed: "sidst gennemført {date}",
-  log_completed_btn: "✓ Registrér som gennemført", check_all_btn: "Markér alle {n} punkter for at gennemføre",
+  log_completed_btn: "Registrér som gennemført", check_all_btn: "Markér alle {n} punkter for at gennemføre",
   reset_boxes: "Nulstil afkrydsninger", reset_confirm: "Fjern alle markeringer?",
-  completed_alert: "Registreret! ✓ Tjeklisten er nulstillet til næste gang.",
+  completed_alert: "Registreret! Tjeklisten er nulstillet til næste gang.",
   items_lbl: "{n} punkter", list_completed_log: "{name} gennemført",
 
   // opgaver
   todo_ph: "Ny opgave… fx Køb ekstra impeller", add_btn: "Tilføj",
   todo_head: "Skal laves ({n})", done_head: "Færdige",
   todos_empty: "Intet på listen. Tilføj ting i samme øjeblik du spotter dem om bord — med et foto.",
-  mark_done_btn: "✓ Markér som færdig", mark_undone_btn: "Markér som ikke færdig",
+  mark_done_btn: "Markér som færdig", mark_undone_btn: "Markér som ikke færdig",
   delete_btn: "Slet", delete_todo_confirm: "Slet denne opgave?",
   todo_note_ph: "Detaljer, mål, varenumre…", added_lbl: "Oprettet", done_lbl: "færdig",
 
   // guide
   guide_intro: "<strong>Hvad er det, jeg kigger på?</strong> Letforståelige forklaringer på de dele, du møder på din Marex 370. Åbn hver enkelt og tag et foto af <em>din</em> båds udgave — næste sæson takker du dig selv.",
-  yours: "📷 Din egen",
+  yours: "Din egen",
   yours_tip: "Tag et foto af denne del på din båd, så du altid ved hvordan den ser ud (og hvordan den så ud, da den var sund).",
   what_is: "Hvad det er", where_find: "Hvor den sidder", what_look: "Hvad du skal se efter", how_often: "Hvor ofte",
 
   // logbog
   log_empty: "Ingen registreringer endnu.",
-  fuel_card: "⛽ Diesel i år", fuel_total: "{l} L", fuel_cost: " · {p} kr",
+  fuel_card: "Diesel i år", fuel_total: "{l} L", fuel_cost: " · {p} kr",
   fuel_rate: "≈ {r} L/t i snit (ud fra tankninger med timetal)",
 
   // formularer
@@ -497,7 +497,7 @@ STRINGS.da = {
   settings: "Indstillinger", boat_name_lbl: "Bådens navn", engine_lbl: "Motor", language_lbl: "Sprog / Language",
   backup_head: "Backup",
   backup_tip: "Data ligger kun på denne telefon. Eksportér en backup en gang imellem (fotos kommer ikke med i filen — de bliver på enheden).",
-  export_btn: "⬇️ Eksportér backup", import_btn: "⬆️ Importér backup",
+  export_btn: "Eksportér backup", import_btn: "Importér backup",
   danger_head: "Farezone", erase_btn: "Slet alle data",
   erase_c1: "Slet ALLE data? Det kan ikke fortrydes.",
   erase_c2: "Helt sikker? Servicehistorik, opgaver og fotos forsvinder.",
@@ -506,7 +506,7 @@ STRINGS.da = {
   storage_full: "Kunne ikke gemme data (lager fuldt?). Eksportér en backup fra Indstillinger.",
 
   // sæson
-  season_water_log: "Søsat — i vandet 🌊", season_land_log: "Taget op — på land 🛠️",
+  season_water_log: "Søsat — i vandet", season_land_log: "Taget op — på land",
   launch_prompt: "Hun er i vandet! Åbn forårets søsætningstjekliste?",
   haulout_prompt: "Taget op. Åbn tjeklisten for optagning & vinterklargøring?",
 

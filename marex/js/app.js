@@ -140,8 +140,8 @@ function render() {
   else if (nav.tab === "guide")   { title = STR.title_guide; html = guideView(); }
 
   $("#title").textContent = title;
-  $('[data-action="viewer-delete"]').textContent = STR.viewer_delete;
-  $('[data-action="viewer-close"]').textContent = STR.viewer_close;
+  $('[data-action="viewer-delete"]').innerHTML = icon("trash-2",{size:16}) + STR.viewer_delete;
+  $('[data-action="viewer-close"]').innerHTML = icon("x",{size:16}) + STR.viewer_close;
   view.innerHTML = html;
   view.scrollTop = 0;
   hydratePhotos(view);
@@ -168,14 +168,16 @@ function homeView() {
 
   return `
   ${showInstall ? `
-  <section class="card notice">
-    ${STR.install_hint}
-    <div><button class="btn small outline" data-action="dismiss-install">${STR.got_it}</button></div>
+  <section class="card alert">
+    <span class="alert-ic">${icon("info", { size: 18 })}</span>
+    <div class="alert-body">${STR.install_hint}
+      <div><button class="btn small outline" data-action="dismiss-install">${STR.got_it}</button></div>
+    </div>
   </section>` : ""}
   <section class="card hero">
     <div class="hero-photo">
       <img class="hero-img" src="img/marex-370.jpg?v=1" alt="${esc(state.settings.boatName)}">
-      <span class="hero-badge ${onWater ? "water" : "land"}">${onWater ? STR.in_water : STR.on_land}</span>
+      <span class="hero-badge ${onWater ? "water" : "land"}">${icon(onWater ? "waves" : "warehouse", { size: 14 })}${onWater ? STR.in_water : STR.on_land}</span>
       <button class="hero-season-btn" data-action="toggle-season">${onWater ? STR.btn_haulout : STR.btn_launch}</button>
       <div class="hero-scrim"></div>
       <div class="hero-info">
@@ -192,55 +194,62 @@ function homeView() {
     </div>
   </section>
 
-  ${s.hours == null ? `<section class="card notice">${STR.start_here}</section>` : ""}
+  ${s.hours == null ? `
+  <section class="card alert">
+    <span class="alert-ic">${icon("info", { size: 18 })}</span>
+    <div class="alert-body">${STR.start_here}</div>
+  </section>` : ""}
+
+  ${due.length ? `
+  <section class="card">
+    <div class="card-head"><h2>${icon("triangle-alert", { size: 16, cls: "head-ic warn" })}${STR.needs_attention}</h2><a data-action="goto-service">${STR.service_link}</a></div>
+    ${due.slice(0, 6).map(x => `
+      <div class="row" data-action="${x.kind === "svc" ? "open-service" : "open-expiry"}" data-id="${x.id}">
+        <span class="row-ic ${x.st.code}">${icon(x.kind === "svc" ? "wrench" : "hourglass", { size: 17 })}</span>
+        <div class="row-main">
+          <div class="row-title">${esc(x.name)}</div>
+          <div class="row-sub">${esc(x.st.detail)}</div>
+        </div>
+        <span class="pill ${x.st.code}">${x.st.label}</span>
+      </div>`).join("")}
+  </section>` : ""}
 
   <section class="card">
-    <div class="card-head"><h2>${STR.needs_attention}</h2><a data-action="goto-service">${STR.service_link}</a></div>
-    ${due.length === 0
-      ? `<div class="empty">${STR.nothing_due} ${notLogged ? T("unlogged_hint", { n: notLogged }) : STR.all_good}</div>`
-      : due.slice(0, 6).map(x => `
-        <div class="row" data-action="${x.kind === "svc" ? "open-service" : "open-expiry"}" data-id="${x.id}">
-          <div class="row-main">
-            <div class="row-title">${esc(x.name)}</div>
-            <div class="row-sub">${esc(x.st.detail)}</div>
-          </div>
-          <span class="pill ${x.st.code}">${x.st.label}</span>
-        </div>`).join("")}
-  </section>
-
-  <section class="card">
-    <div class="card-head"><h2>${STR.quick_lists}</h2></div>
+    <div class="card-head"><h2>${icon("list-checks", { size: 16, cls: "head-ic" })}${STR.quick_lists}</h2></div>
     <div class="chip-row">
-      <button class="chip" data-action="open-list" data-id="pretrip">${STR.chip_pretrip}</button>
-      <button class="chip" data-action="open-list" data-id="posttrip">${STR.chip_posttrip}</button>
-      <button class="chip" data-action="open-list" data-id="monthly">${STR.chip_monthly}</button>
+      <button class="chip" data-action="open-list" data-id="pretrip">${icon("compass", { size: 15 })}${STR.chip_pretrip}</button>
+      <button class="chip" data-action="open-list" data-id="posttrip">${icon("flag", { size: 15 })}${STR.chip_posttrip}</button>
+      <button class="chip" data-action="open-list" data-id="monthly">${icon("calendar-days", { size: 15 })}${STR.chip_monthly}</button>
     </div>
   </section>
 
   <section class="card">
-    <div class="card-head"><h2>${STR.logbook}</h2><a data-action="open-log">${STR.all_link}</a></div>
+    <div class="card-head"><h2>${icon("book-open", { size: 16, cls: "head-ic" })}${STR.logbook}</h2><a data-action="open-log">${STR.all_link}</a></div>
     ${recent.length === 0 ? `<div class="empty">${STR.log_empty}</div>` : recent.map(logRow).join("")}
     <div class="btn-row">
-      <button class="btn outline" data-action="add-trip">${STR.add_trip_btn}</button>
-      <button class="btn outline" data-action="add-note">${STR.add_note_btn}</button>
+      <button class="btn outline" data-action="add-trip">${icon("compass", { size: 16 })}${STR.add_trip_btn}</button>
+      <button class="btn outline" data-action="add-note">${icon("pencil", { size: 16 })}${STR.add_note_btn}</button>
     </div>
   </section>`;
 }
 
+/* log entry type -> lucide icon */
+const LOG_ICON = { service: "wrench", checklist: "clipboard-check", hours: "timer", note: "pencil", season: "anchor", todo: "circle-check", fuel: "fuel", trip: "compass" };
+
 function logRow(e) {
-  const icons = { service: "🔧", checklist: "✅", hours: "⏱", note: "📝", season: "⚓️", todo: "☑️", fuel: "⛽", trip: "🧭" };
   return `
   <div class="row" data-action="open-logentry" data-id="${e.id}">
+    <span class="row-ic">${icon(LOG_ICON[e.type] || "circle-check", { size: 17 })}</span>
     <div class="row-main">
-      <div class="row-title">${icons[e.type] || "•"} ${esc(e.title)}</div>
-      <div class="row-sub">${fmtDate(new Date(e.ts).toISOString().slice(0, 10))}${e.detail ? " · " + esc(e.detail) : ""}${e.photos?.length ? " · 📷" + e.photos.length : ""}</div>
+      <div class="row-title">${esc(e.title)}</div>
+      <div class="row-sub">${fmtDate(new Date(e.ts).toISOString().slice(0, 10))}${e.detail ? " · " + esc(e.detail) : ""}${e.photos?.length ? ` · ${icon("camera", { size: 12, cls: "inline-ic" })}${e.photos.length}` : ""}</div>
     </div>
   </div>`;
 }
 
 function serviceView() {
   const baseline = state.settings.hours == null
-    ? `<section class="card notice">${STR.baseline_notice}</section>` : "";
+    ? `<section class="card alert"><span class="alert-ic">${icon("info", { size: 18 })}</span><div class="alert-body">${STR.baseline_notice}</div></section>` : "";
 
   const expiries = (state.expiries || []).slice()
     .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
@@ -250,11 +259,12 @@ function serviceView() {
     if (!items.length) return "";
     return `
     <section class="card">
-      <div class="card-head"><h2>${g.icon} ${esc(g.name)}</h2></div>
+      <div class="card-head"><h2>${icon(g.icon, { size: 16, cls: "head-ic" })}${esc(g.name)}</h2></div>
       ${items.map(svc => {
         const st = serviceStatus(svc);
         return `
         <div class="row" data-action="open-service" data-id="${svc.id}">
+          <span class="row-ic ${st.code}">${icon(GUIDE_ICON[svc.id] || g.icon, { size: 17 })}</span>
           <div class="row-main">
             <div class="row-title">${esc(svc.name)}${svc.pro ? ` <span class="tag">${STR.workshop}</span>` : ""}</div>
             <div class="row-sub">${intervalText(svc)}${st.last ? ` · ${STR.last_lbl} ${fmtDate(st.last.date)}${st.last.hours != null ? " @ " + st.last.hours + " " + STR.hr : ""}` : ""}</div>
@@ -265,12 +275,13 @@ function serviceView() {
     </section>`;
   }).join("") + `
   <section class="card">
-    <div class="card-head"><h2>${STR.expiry_card}</h2></div>
+    <div class="card-head"><h2>${icon("hourglass", { size: 16, cls: "head-ic" })}${STR.expiry_card}</h2></div>
     ${expiries.length === 0 ? `<div class="empty">${STR.expiry_hint}</div>`
       : expiries.map(x => {
         const st = expiryStatus(x);
         return `
         <div class="row" data-action="open-expiry" data-id="${x.id}">
+          <span class="row-ic ${st.code}">${icon("hourglass", { size: 17 })}</span>
           <div class="row-main">
             <div class="row-title">${esc(x.name)}</div>
             <div class="row-sub">${esc(st.detail)}</div>
@@ -278,11 +289,22 @@ function serviceView() {
           <span class="pill ${st.code}">${st.label}</span>
         </div>`;
       }).join("")}
-    <button class="btn outline wide" data-action="add-expiry">${STR.add_expiry_btn}</button>
+    <button class="btn outline wide" data-action="add-expiry">${icon("plus", { size: 16 })}${STR.add_expiry_btn}</button>
   </section>
-  <button class="btn outline wide" data-action="add-service">${STR.add_service_btn}</button>
+  <button class="btn outline wide" data-action="add-service">${icon("plus", { size: 16 })}${STR.add_service_btn}</button>
   <div class="footnote">${STR.svc_footnote}</div>`;
 }
+
+/* service/guide id -> lucide icon (service rows borrow the guide iconography where it exists) */
+const GUIDE_ICON = {
+  oil: "gauge", fuelfilter: "fuel", impeller: "fan", belts: "rotate-cw", airfilter: "filter",
+  coolant: "droplet", valves: "cog", heatex: "flame", enginezinc: "magnet",
+  anodes: "magnet", antifoul: "paintbrush", propshaft: "fan", shaftseal: "droplet",
+  seacocks: "toggle-right", hoses: "waves", thruster: "move-horizontal", rudder: "ship-wheel",
+  batteries: "battery-charging", freshwater: "droplets", toilet: "droplet", heater: "flame",
+  gas: "flame", windlass: "anchor", trimtabs: "ruler", canvas: "warehouse",
+  extinguisher: "flame", lifejackets: "life-buoy", flares: "flag", firstaid: "plus", alarms: "bell",
+};
 
 function listsView() {
   return CHECKLISTS.map(l => {
@@ -293,14 +315,14 @@ function listsView() {
     return `
     <section class="card tappable" data-action="open-list" data-id="${l.id}">
       <div class="list-card">
-        <div class="list-icon">${l.icon}</div>
+        <span class="list-icon">${icon(l.icon, { size: 20 })}</span>
         <div class="row-main">
           <div class="row-title">${esc(l.name)}</div>
           <div class="row-sub">${esc(l.desc)}</div>
           <div class="progress"><div style="width:${total ? Math.round(done / total * 100) : 0}%"></div></div>
           <div class="muted tiny">${T("checked_lbl", { a: done, b: total })}${lastDone ? ` · ${T("last_completed", { date: fmtDate(new Date(lastDone.ts).toISOString().slice(0, 10)) })}` : ""}</div>
         </div>
-        <div class="chev">›</div>
+        <span class="chev">${icon("chevron-right", { size: 18 })}</span>
       </div>
     </section>`;
   }).join("");
@@ -335,7 +357,7 @@ function checklistView(l) {
     }).join("")}
   </section>`).join("")}
   <button id="cl-complete" class="btn primary wide ${allDone ? "" : "disabled"}" data-action="complete-list" data-id="${l.id}">
-    ${allDone ? STR.log_completed_btn : T("check_all_btn", { n: total })}
+    ${allDone ? icon("check",{size:16}) + STR.log_completed_btn : T("check_all_btn", { n: total })}
   </button>
   <button class="btn ghost wide" data-action="reset-list" data-id="${l.id}">${STR.reset_boxes}</button>`;
 }
@@ -351,12 +373,12 @@ function todosView() {
     </form>
   </section>
   <section class="card">
-    <div class="card-head"><h2>${T("todo_head", { n: open.length })}</h2></div>
+    <div class="card-head"><h2>${icon("list-todo", { size: 16, cls: "head-ic" })}${T("todo_head", { n: open.length })}</h2></div>
     ${open.length === 0 ? `<div class="empty">${STR.todos_empty}</div>` : open.map(todoRow).join("")}
   </section>
   ${closed.length ? `
   <section class="card">
-    <div class="card-head"><h2>${STR.done_head}</h2></div>
+    <div class="card-head"><h2>${icon("check", { size: 16, cls: "head-ic" })}${STR.done_head}</h2></div>
     ${closed.map(todoRow).join("")}
   </section>` : ""}`;
 }
@@ -367,24 +389,27 @@ function todoRow(t) {
     <input type="checkbox" data-action="toggle-todo" data-id="${t.id}" ${t.done ? "checked" : ""}>
     <div class="row-main" data-action="open-todo" data-id="${t.id}">
       <div class="row-title">${esc(t.title)}</div>
-      <div class="row-sub">${fmtDate(new Date(t.created).toISOString().slice(0, 10))}${t.note ? " · " + esc(t.note.slice(0, 60)) : ""}${t.photos?.length ? " · 📷" + t.photos.length : ""}</div>
+      <div class="row-sub">${fmtDate(new Date(t.created).toISOString().slice(0, 10))}${t.note ? " · " + esc(t.note.slice(0, 60)) : ""}${t.photos?.length ? ` · ${icon("camera", { size: 12, cls: "inline-ic" })}${t.photos.length}` : ""}</div>
     </div>
-    <div class="chev">›</div>
+    <span class="chev">${icon("chevron-right", { size: 18 })}</span>
   </div>`;
 }
 
 function guideView() {
   return `
-  <section class="card notice">${STR.guide_intro}</section>
+  <section class="card alert">
+    <span class="alert-ic">${icon("circle-help", { size: 18 })}</span>
+    <div class="alert-body">${STR.guide_intro}</div>
+  </section>
   ${GUIDE.map(g => `
   <div class="card tappable" data-action="open-guide" data-id="${g.id}">
     <div class="list-card">
-      <div class="list-icon">${g.icon}</div>
+      <span class="list-icon">${icon(g.icon, { size: 20 })}</span>
       <div class="row-main">
         <div class="row-title">${esc(g.name)}</div>
         <div class="row-sub">${esc(g.what.slice(0, 90))}…</div>
       </div>
-      <div class="chev">›</div>
+      <span class="chev">${icon("chevron-right", { size: 18 })}</span>
     </div>
   </div>`).join("")}`;
 }
@@ -400,7 +425,7 @@ function guideItemView(g) {
     <h3>${STR.how_often}</h3><p>${esc(g.when)}</p>
   </section>
   <section class="card">
-    <div class="card-head"><h2>${STR.yours}</h2></div>
+    <div class="card-head"><h2>${icon("camera", { size: 16, cls: "head-ic" })}${STR.yours}</h2></div>
     <p class="muted tiny">${STR.yours_tip}</p>
     ${photoStrip(photos, { kind: "guide", id: g.id })}
   </section>`;
@@ -424,7 +449,7 @@ function fuelSummary() {
   }
   return `
   <section class="card">
-    <div class="card-head"><h2>${STR.fuel_card}</h2></div>
+    <div class="card-head"><h2>${icon("fuel", { size: 16, cls: "head-ic" })}${STR.fuel_card}</h2></div>
     <div class="stat">${T("fuel_total", { l: Math.round(liters) })}${cost ? T("fuel_cost", { p: Math.round(cost) }) : ""}</div>
     ${rate ? `<div class="muted tiny">${rate}</div>` : ""}
   </section>`;
@@ -433,9 +458,9 @@ function fuelSummary() {
 function logView() {
   return `
   <div class="btn-row">
-    <button class="btn outline" data-action="add-trip">${STR.add_trip_btn}</button>
-    <button class="btn outline" data-action="add-fuel">${STR.add_fuel_btn}</button>
-    <button class="btn outline" data-action="add-note">${STR.add_note_btn}</button>
+    <button class="btn outline" data-action="add-trip">${icon("compass", { size: 16 })}${STR.add_trip_btn}</button>
+    <button class="btn outline" data-action="add-fuel">${icon("fuel", { size: 16 })}${STR.add_fuel_btn}</button>
+    <button class="btn outline" data-action="add-note">${icon("pencil", { size: 16 })}${STR.add_note_btn}</button>
   </div>
   ${fuelSummary()}
   <section class="card">
@@ -449,7 +474,7 @@ function photoStrip(ids, ctx) {
   return `
   <div class="photo-strip">
     ${ids.map(id => `<img class="thumb" data-photo-id="${id}" data-action="view-photo" data-id="${id}" data-ctx='${esc(JSON.stringify(ctx))}' alt="">`).join("")}
-    <button class="thumb add" data-action="add-photo" data-ctx='${esc(JSON.stringify(ctx))}'>📷<br>${STR.add_photo_lbl}</button>
+    <button class="thumb add" data-action="add-photo" data-ctx='${esc(JSON.stringify(ctx))}'>${icon("camera", { size: 20 })}<span>${STR.add_photo_lbl}</span></button>
   </div>`;
 }
 
@@ -528,7 +553,7 @@ function openServiceSheet(id) {
     <h2>${esc(svc.name)} <span class="pill ${st.code}">${st.label}</span></h2>
     <p class="muted">${intervalText(svc)}${svc.pro ? " · " + STR.usually_workshop : ""}</p>
     <p>${esc(svc.why || "")}</p>
-    <button class="btn primary wide" data-action="mark-done-form" data-id="${id}">${STR.mark_done_btn}</button>
+    <button class="btn primary wide" data-action="mark-done-form" data-id="${id}">${icon("check",{size:16})}${STR.mark_done_btn}</button>
     ${entries.length ? `<h3>${STR.history}</h3>` + entries.map(en => `
       <div class="hist">
         <div class="row-title">${fmtDate(en.date)}${en.hours != null ? ` · ${en.hours} ${STR.hr}` : ""}</div>
@@ -536,7 +561,7 @@ function openServiceSheet(id) {
         ${en.photos?.length ? `<div class="photo-strip">${en.photos.map(p =>
           `<img class="thumb" data-photo-id="${p}" data-action="view-photo" data-id="${p}" alt="">`).join("")}</div>` : ""}
       </div>`).join("") : `<p class="muted tiny">${STR.no_history_tip}</p>`}
-    ${svc.custom ? `<button class="btn danger ghost wide" data-action="delete-service" data-id="${id}">${STR.delete_item_btn}</button>` : ""}
+    ${svc.custom ? `<button class="btn danger ghost wide" data-action="delete-service" data-id="${id}">${icon("trash-2",{size:16})}${STR.delete_item_btn}</button>` : ""}
   `, () => openServiceSheet(id));
 }
 
@@ -662,8 +687,8 @@ function openTodoSheet(id) {
       <textarea id="todo-note" rows="3" data-action-input="todo-note" data-id="${t.id}" placeholder="${STR.todo_note_ph}">${esc(t.note || "")}</textarea>
     </label>
     <div class="field"><span>${STR.photos_lbl}</span>${photoStrip(t.photos || [], { kind: "todo", id: t.id })}</div>
-    <button class="btn primary wide" data-action="toggle-todo-sheet" data-id="${t.id}">${t.done ? STR.mark_undone_btn : STR.mark_done_btn}</button>
-    <button class="btn danger ghost wide" data-action="delete-todo" data-id="${t.id}">${STR.delete_btn}</button>
+    <button class="btn primary wide" data-action="toggle-todo-sheet" data-id="${t.id}">${t.done ? STR.mark_undone_btn : icon("check",{size:16}) + STR.mark_done_btn}</button>
+    <button class="btn danger ghost wide" data-action="delete-todo" data-id="${t.id}">${icon("trash-2",{size:16})}${STR.delete_btn}</button>
   `, renderIt);
   renderIt();
 }
@@ -679,7 +704,7 @@ function openExpirySheet(id) {
       <input type="date" id="exp-date" value="${x?.date || ""}">
     </label>
     <button class="btn primary wide" data-action="save-expiry" data-id="${x?.id || ""}">${STR.save}</button>
-    ${x ? `<button class="btn danger ghost wide" data-action="delete-expiry" data-id="${x.id}">${STR.delete_btn}</button>` : ""}
+    ${x ? `<button class="btn danger ghost wide" data-action="delete-expiry" data-id="${x.id}">${icon("trash-2",{size:16})}${STR.delete_btn}</button>` : ""}
   `);
 }
 
@@ -692,7 +717,7 @@ function openLogEntrySheet(id) {
     ${e.detail ? `<p>${esc(e.detail)}</p>` : ""}
     ${e.photos?.length ? `<div class="photo-strip">${e.photos.map(p =>
       `<img class="thumb" data-photo-id="${p}" data-action="view-photo" data-id="${p}" alt="">`).join("")}</div>` : ""}
-    <button class="btn danger ghost wide" data-action="delete-logentry" data-id="${e.id}">${STR.delete_entry_btn}</button>
+    <button class="btn danger ghost wide" data-action="delete-logentry" data-id="${e.id}">${icon("trash-2",{size:16})}${STR.delete_entry_btn}</button>
   `, () => openLogEntrySheet(id));
 }
 
@@ -714,11 +739,11 @@ function openSettingsSheet() {
     <button class="btn primary wide" data-action="save-settings">${STR.save}</button>
     <h3>${STR.backup_head}</h3>
     <p class="muted tiny">${STR.backup_tip}</p>
-    <button class="btn outline wide" data-action="export-data">${STR.export_btn}</button>
-    <button class="btn outline wide" data-action="import-data">${STR.import_btn}</button>
+    <button class="btn outline wide" data-action="export-data">${icon("download",{size:16})}${STR.export_btn}</button>
+    <button class="btn outline wide" data-action="import-data">${icon("upload",{size:16})}${STR.import_btn}</button>
     <input type="file" id="import-input" accept="application/json" class="hidden-input">
     <h3>${STR.danger_head}</h3>
-    <button class="btn danger ghost wide" data-action="wipe-data">${STR.erase_btn}</button>
+    <button class="btn danger ghost wide" data-action="wipe-data">${icon("trash-2",{size:16})}${STR.erase_btn}</button>
   `);
 }
 
@@ -1145,7 +1170,18 @@ document.addEventListener("submit", e => {
   });
 })();
 
+/* ---------- chrome icons ---------- */
+const TAB_ICON = { home: "anchor", service: "wrench", lists: "clipboard-check", todos: "list-todo", guide: "book-open" };
+function initChrome() {
+  $("#backbtn").innerHTML = icon("arrow-left", { size: 24 });
+  $("#gearbtn").innerHTML = icon("settings", { size: 21 });
+  $$("#tabbar button").forEach(b => {
+    b.querySelector(".ticon").innerHTML = icon(TAB_ICON[b.dataset.tab], { size: 22 });
+  });
+}
+
 /* ---------- go ---------- */
 applyLang(state.settings.lang || "da");
 applyPatches();
+initChrome();
 render();
