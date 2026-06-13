@@ -173,21 +173,22 @@ function homeView() {
     <div><button class="btn small outline" data-action="dismiss-install">${STR.got_it}</button></div>
   </section>` : ""}
   <section class="card hero">
-    <div class="hero-row">
-      <div>
-        <div class="hero-label">${STR.status}</div>
-        <div class="hero-season">${onWater ? STR.in_water : STR.on_land}</div>
+    <div class="hero-photo">
+      <img class="hero-img" src="img/marex-370.jpg?v=1" alt="${esc(state.settings.boatName)}">
+      <span class="hero-badge ${onWater ? "water" : "land"}">${onWater ? STR.in_water : STR.on_land}</span>
+      <button class="hero-season-btn" data-action="toggle-season">${onWater ? STR.btn_haulout : STR.btn_launch}</button>
+      <div class="hero-scrim"></div>
+      <div class="hero-info">
+        <div class="hero-name">${esc(state.settings.boatName || "Marex 370")}</div>
+        <div class="hero-statline">
+          <div>
+            <div class="hero-cap">${STR.engine_hours}</div>
+            <div class="hero-hours">${s.hours != null ? esc(s.hours) + " " + STR.hr : STR.not_set}</div>
+            ${s.hoursDate ? `<div class="hero-updated">${T("updated_on", { date: fmtDate(s.hoursDate) })}</div>` : ""}
+          </div>
+          <button class="btn small hero-update" data-action="edit-hours">${STR.btn_update}</button>
+        </div>
       </div>
-      <button class="btn small outline" data-action="toggle-season">${onWater ? STR.btn_haulout : STR.btn_launch}</button>
-    </div>
-    <div class="hero-sep"></div>
-    <div class="hero-row">
-      <div>
-        <div class="hero-label">${STR.engine_hours}</div>
-        <div class="hero-hours">${s.hours != null ? esc(s.hours) + " " + STR.hr : STR.not_set}</div>
-        ${s.hoursDate ? `<div class="muted tiny">${T("updated_on", { date: fmtDate(s.hoursDate) })}</div>` : ""}
-      </div>
-      <button class="btn small" data-action="edit-hours">${STR.btn_update}</button>
     </div>
   </section>
 
@@ -1063,6 +1064,86 @@ document.addEventListener("submit", e => {
     setTimeout(() => $("#new-todo")?.focus(), 50);
   }
 });
+
+/* ---------- touch gestures: pull-to-refresh + edge-swipe back ---------- */
+(function setupGestures() {
+  const view = $("#view");
+  const app = $("#app");
+  const ptr = document.createElement("div");
+  ptr.id = "ptr";
+  ptr.innerHTML = '<div class="ptr-spin"></div>';
+  app.insertBefore(ptr, view);
+
+  const PULL_MAX = 72, PULL_TRIGGER = 52, BACK_EDGE = 30, BACK_TRIGGER = 0.33;
+  let mode = null;           // pending | scroll | ptr | back
+  let startX = 0, startY = 0;
+
+  const overlayOpen = () =>
+    !$("#sheet").classList.contains("hidden") || !$("#viewer").classList.contains("hidden");
+
+  const resetView = () => {
+    view.style.transition = "none";
+    view.style.transform = "";
+    view.style.opacity = "";
+  };
+
+  view.addEventListener("touchstart", e => {
+    if (e.touches.length !== 1 || overlayOpen()) { mode = null; return; }
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    mode = "pending";
+  }, { passive: true });
+
+  view.addEventListener("touchmove", e => {
+    if (!mode || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+
+    if (mode === "pending") {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      if (nav.page && startX <= BACK_EDGE && dx > Math.abs(dy)) mode = "back";
+      else if (view.scrollTop <= 0 && dy > Math.abs(dx)) mode = "ptr";
+      else mode = "scroll";
+    }
+
+    if (mode === "back") {
+      e.preventDefault();
+      const t = Math.max(0, Math.min(dx, view.clientWidth));
+      view.style.transition = "none";
+      view.style.transform = `translateX(${t}px)`;
+      view.style.opacity = String(1 - Math.min(t / view.clientWidth, .4));
+    } else if (mode === "ptr") {
+      if (view.scrollTop > 0 || dy <= 0) { ptr.style.height = "0"; ptr.classList.remove("ready"); return; }
+      e.preventDefault();
+      const pull = Math.min(dy * 0.5, PULL_MAX);
+      ptr.style.height = pull + "px";
+      ptr.classList.toggle("ready", pull >= PULL_TRIGGER);
+    }
+  }, { passive: false });
+
+  view.addEventListener("touchend", e => {
+    const dx = (e.changedTouches[0] ? e.changedTouches[0].clientX : startX) - startX;
+    if (mode === "back") {
+      view.style.transition = "transform .2s ease, opacity .2s ease";
+      if (dx > view.clientWidth * BACK_TRIGGER) {
+        view.style.transform = "translateX(100%)";
+        view.style.opacity = "0";
+        setTimeout(() => { go(nav.tab); resetView(); }, 170);
+      } else {
+        view.style.transform = ""; view.style.opacity = "";
+      }
+    } else if (mode === "ptr") {
+      if (ptr.classList.contains("ready")) {
+        ptr.classList.add("spinning");
+        ptr.style.height = PULL_TRIGGER + "px";
+        setTimeout(() => location.reload(), 400);
+      } else {
+        ptr.style.height = "0";
+      }
+    }
+    mode = null;
+  });
+})();
 
 /* ---------- go ---------- */
 applyLang(state.settings.lang || "da");
