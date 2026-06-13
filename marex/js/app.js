@@ -173,21 +173,22 @@ function homeView() {
     <div><button class="btn small outline" data-action="dismiss-install">${STR.got_it}</button></div>
   </section>` : ""}
   <section class="card hero">
-    <div class="hero-row">
-      <div>
-        <div class="hero-label">${STR.status}</div>
-        <div class="hero-season">${onWater ? STR.in_water : STR.on_land}</div>
+    <div class="hero-photo">
+      <img class="hero-img" src="img/marex-370.jpg?v=1" alt="${esc(state.settings.boatName)}">
+      <span class="hero-badge ${onWater ? "water" : "land"}">${onWater ? STR.in_water : STR.on_land}</span>
+      <button class="hero-season-btn" data-action="toggle-season">${onWater ? STR.btn_haulout : STR.btn_launch}</button>
+      <div class="hero-scrim"></div>
+      <div class="hero-info">
+        <div class="hero-name">${esc(state.settings.boatName || "Marex 370")}</div>
+        <div class="hero-statline">
+          <div>
+            <div class="hero-cap">${STR.engine_hours}</div>
+            <div class="hero-hours">${s.hours != null ? esc(s.hours) + " " + STR.hr : STR.not_set}</div>
+            ${s.hoursDate ? `<div class="hero-updated">${T("updated_on", { date: fmtDate(s.hoursDate) })}</div>` : ""}
+          </div>
+          <button class="btn small hero-update" data-action="edit-hours">${STR.btn_update}</button>
+        </div>
       </div>
-      <button class="btn small outline" data-action="toggle-season">${onWater ? STR.btn_haulout : STR.btn_launch}</button>
-    </div>
-    <div class="hero-sep"></div>
-    <div class="hero-row">
-      <div>
-        <div class="hero-label">${STR.engine_hours}</div>
-        <div class="hero-hours">${s.hours != null ? esc(s.hours) + " " + STR.hr : STR.not_set}</div>
-        ${s.hoursDate ? `<div class="muted tiny">${T("updated_on", { date: fmtDate(s.hoursDate) })}</div>` : ""}
-      </div>
-      <button class="btn small" data-action="edit-hours">${STR.btn_update}</button>
     </div>
   </section>
 

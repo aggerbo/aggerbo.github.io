@@ -1,6 +1,6 @@
 /* Offline support: pre-cache the app shell, serve cache-first.
    Bump VERSION on every deploy so clients pick up changes. */
-const VERSION = "v2.2.0";
+const VERSION = "v2.4.0";
 const CACHE = "marex370-" + VERSION;
 const SHELL = [
   "./",
@@ -12,6 +12,7 @@ const SHELL = [
   "js/illustrations.js",
   "js/db.js",
   "js/app.js",
+  "img/marex-370.jpg?v=1",
   "manifest.webmanifest",
   "icons/icon-180.png",
   "icons/icon-192.png",
